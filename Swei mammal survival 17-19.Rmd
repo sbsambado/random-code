@@ -1,0 +1,55 @@
+---
+title: "swei mammal data"
+author: "sbsambado"
+date: "3/27/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# install packages
+library(readr)
+library(dplyr)
+library(tidyr)
+
+## Swei mammal survival 17,18,19
+survival<- read_csv("~/Desktop/Swei_mammal_survival_171819.csv")
+View(survival)
+
+## drop NA data for id
+survnoNAs<-survival%>% filter(!is.na(id))
+View(survnoNAs)
+
+
+## survived more than 1 field seasons
+survived2<-survnoNAs%>% group_by(id) %>% 
+  filter(n()>1) %>%
+  summarize(n=n())
+survived2
+View(survived2) ## 69 animals survived more than 1 field season
+
+
+## surived more than 2 field seasons
+survived3<-survnoNAs%>% group_by(id) %>%
+  filter(n()>2) %>%
+  summarize(n=n())
+survived3
+View(survived3) ## 7 animals survived more than 1 field season
+
+## try to plot sites with high survival mammals
+library(ggplot2)
+survnoNAs%>%
+  group_by(id)%>%
+  filter(n()>2) %>% ## filter out mammals that have been caught less than 2 yrs
+  select(id, site) %>%
+  ggplot(aes(site, id)) + geom_point() + 
+  theme_bw() + 
+  theme_classic() +
+  labs(title = "Individual mammal survival at site", x=("Site"), y=("Mammal ID"))
+
+
+```
+
