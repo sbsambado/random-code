@@ -1,0 +1,302 @@
+---
+title: "R cookbook 2nd edition"
+author: "sbsambado"
+date: "3/27/2020"
+output: html_document
+---
+```{r}
+## entering random code I found useful reading R cookbook
+## https://rc2e.com/gettingstarted
+
+## shotcuts
+
+#Up arrow > Ctrl-P
+
+#Down arrow > Ctrl-N
+
+## move cursor to start of line > Ctrl-A
+## move cursor to end of line > Ctrl-E
+
+# delete everything from cursor poisiton to the end of line > Ctrl-K
+# clear the whole line and start over > Crtl-U
+
+## see documentation's table of contents
+help.start()
+
+## see reminder of function arguments
+args(functionname)
+
+## see examples of using function
+example(functionname)
+
+# shortcut for help page
+?functionname
+
+## can't remember the function
+help.search("functionname")
+??functionname
+
+## vignettes: additional documents such as intros, tutorials, reference cards
+vignette()
+
+#### chapter 2
+# printing
+print(pi)
+pi
+
+print(matrix(c(1,2,3,4), 2,2))
+print(list("a","b","c"))
+
+## print only prints one item at a time
+## cat allows you to concatenate multiple items
+cat("the zero occurs at",2*pi, "radians.","/n")
+## have to use "/n" to terminate line
+
+
+z<-sqrt(2^2 + 3^2)
+print(z)
+
+x<-c("free", "fie", "foe")
+print(x)
+
+## use ls to displays names of objects in your workspacre
+ls()
+
+## delete variables or functions
+rm(z)
+ls()
+
+
+## creating a vector
+v1<-c(1,1,1,1,1,1)
+v2<-c(2,2,2,2,2,2)
+c(v1,v2)
+
+## can't mix different types of data i.e. numbers and string
+
+mode(2.112)
+mode("foo")
+
+##basic stats
+mean()
+median()
+sd()
+var()
+#correlation
+cor(x,y)
+#covariance
+cov(x,y)
+
+## can ovveride NA values that prevent basic stats from running
+na.rm=TRUE
+x <- c(0,1,1,2,3,NA)
+sd(x, na.rm = TRUE)
+
+## create sequences
+n:m
+1:5
+seq(from=1, to=5, by=2)
+
+##rep to create series of repeated values
+rep(1, times=5)
+
+## count backwards
+9:0
+
+rep(pi, times=5)
+
+## selecting vector elements (2.9)
+## [ ] to select vector elements by their position, 
+##like v[3] for 3rd element of v
+## use - to exclude elements
+
+
+## select which elemenet of fib u want
+fib<- c(0,1,3,3,4,4,5,6)
+fib[1]
+
+## select elements x through y
+fib[1:3]
+
+##select specific ones
+fib[c(1,2,6)]
+
+## ignore first elemenet
+fib[-1]
+
+## ignore multiple
+fib[-(1:3)]
+
+## vector is TRUE wherever fib <4
+fib <4
+
+## vectro is TRUE wherever fib is even
+fib%%2==0
+
+## vector to select even elements
+fib[fib%%2==0]
+
+## select elements greater than median
+v<-c(3,6,9,11,16,0,3,45,2,8,9,6,-4)
+v[v> median(v)]
+median(v)
+
+#3 select elements in lower and upper 5%
+v[(v<quantile(v,0.05)) | (v> quantile(v,0.95))]
+
+## in ^ | means "or" when indexing, if you wanted "and" use &
+
+# select elements that exceed +- 1 standard deviations from the mean
+v[abs(v-mean(v)) > sd(v)]
+
+# select all elements that are netiher NA or NULL
+v<-c(1,2,3,NA,5)
+v[!is.na(v) & !is.null(v)]
+
+## select elements by name, define names by assigning a vector of character
+years<- c(1960, 1964,1976, 1994)
+names(years)<- c("Kennedy", "Johnson", "Carter", "Clinton")
+years
+
+# refer to individual elements by name
+years["Carter"]
+
+# index vectors of names
+years[c("Carter", "Clinton")]
+
+
+####### performing vector arithmetic
+
+v<-c(11,12,13,14,15)
+w<-c(1,2,3,4,5)
+
+v^w
+mean(w)
+
+w - mean(w)
+sd(w)
+
+w<-1:5
+w
+
+sqrt(w)
+log(w)
+sin(w)
+
+## R interprets text between percent signs as a binary operator
+
+## modulo operator
+%%
+  
+# integer divisin
+%/%
+  
+# matrix multiplication
+%*%
+  
+## returns TRUE if the left operand occurs in its right operand
+%in%
+
+# pipe that passes results from left to a function on the right
+%>%
+
+####### 2.13 creating a pipeline of function calls
+
+# use operator to combine multiple functions together into a "pipeline"
+  
+library(tidyverse)
+data(mpg)
+
+mpg %>%
+  filter(cty>21) %>%
+  head(3) %>%
+  print()
+
+temp1<-filter(mpg, cty>21)
+temp2<-head(temp1,3)
+
+print(temp2)
+
+## %>% pipe operator improve readability
+# pipe takes output of function on the left and passes it as first agrument of right
+
+x%>% head()
+## same as head(x)
+
+x%>% head(n=10)
+head(x, n=10)
+
+filtered_mpg<-filter(mpg,cty>21)
+selected_mpg<-select(filtered_mpg, cty, hwy)
+ggplot(selected_mpg, aes(cty, hwy)) + geom_point()
+
+## or nest functions together
+
+ggplot(select(filter(mpg, cty >21), cty, hwy), aes(cty, hwy)) + geom_point()
+## OR
+
+mpg%>%
+  filter(cty>21) %>%
+  select(cty, hwy) %>%
+  ggplot(aes(cty, hwy)) + geom_point()
+
+## want argument going into target (righthand side) to be other than
+# first argument, use the dot(.)
+
+iris%>% head(3)
+## same as
+iris%>% head(3,x=.)
+
+ls()
+## == for comparisions
+## = for single equals
+
+library(MASS)
+truehist(x, n)        
+
+################### navigating software
+
+getwd()
+
+
+## save.image()
+save.image()
+history()
+
+## show 100 most recent lines of history
+history(100)
+
+# show entire history
+history(Inf)
+
+
+# saves value of most recently evaluated expression
+averylongrunningfunction()
+x<-.Last.value
+x
+
+search()
+
+#### installing github
+
+install.packages("usethis")
+library(usethis)
+
+use_git_config(user.name = "sbsambado", user.email = "sbsambado@ucab.edu")
+
+
+
+
+####  chapter 4
+
+# indicates what values represent missing or NA values na=c("","NA")
+
+
+## how to write df to excel
+
+library(openxlsx)
+write.xlsx(df,
+           sheetName ="some_sheet",
+           file="out_file.xlsx")
+```
+
