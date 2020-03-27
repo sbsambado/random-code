@@ -24,10 +24,10 @@ output: html_document
 help.start()
 
 ## see reminder of function arguments
-args(functionname)
+#args(functionname)
 
 ## see examples of using function
-example(functionname)
+#example(functionname)
 
 # shortcut for help page
 ?functionname
