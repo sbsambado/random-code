@@ -4,7 +4,6 @@ author: "sbsambado"
 date: "3/27/2020"
 output: html_document
 ---
-```{r}
 ## entering random code I found useful reading R cookbook
 ## https://rc2e.com/gettingstarted
 
@@ -78,9 +77,9 @@ mode(2.112)
 mode("foo")
 
 ##basic stats
-mean()
-median()
-sd()
+# mean()
+# median()
+# sd()
 var()
 #correlation
 cor(x,y)
@@ -186,19 +185,19 @@ sin(w)
 ## R interprets text between percent signs as a binary operator
 
 ## modulo operator
-%%
+# %%
   
 # integer divisin
-%/%
+# %/%
   
 # matrix multiplication
-%*%
+# %*%
   
 ## returns TRUE if the left operand occurs in its right operand
-%in%
+# %in%
 
 # pipe that passes results from left to a function on the right
-%>%
+# %>%
 
 ####### 2.13 creating a pipeline of function calls
 
@@ -282,7 +281,7 @@ search()
 install.packages("usethis")
 library(usethis)
 
-use_git_config(user.name = "sbsambado", user.email = "sbsambado@ucab.edu")
+use_git_config(user.name = "sbsambado", user.email = "sbsambado@ucsb.edu")
 
 
 
@@ -298,5 +297,3 @@ library(openxlsx)
 write.xlsx(df,
            sheetName ="some_sheet",
            file="out_file.xlsx")
-```
-
