@@ -1,0 +1,17 @@
+---
+title: "Random code for installing stuff"
+author: "sbsambado"
+date: "4/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Installing github
+```{r}
+#install.packages('usethis')
+# use_git_config(user.name = 'sbsambado', user.email = 'sbsambado@ucsb.edu')
+```
+

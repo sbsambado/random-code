@@ -1,0 +1,154 @@
+---
+title: "YaRrr! A pirates guide to R"
+author: "sbsambado"
+date: "4/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+YaRrr! The Pirate's Guide to R
+Nathaniel D Phillips
+2018-01-22
+
+Thought I'd run through this to see if I can find helpful tidbits of code for the undergradutes and students in Biometry 146.
+
+Chapter 2
+Debugging in R - share this with class
+
+'When you are programming, you will *always*, and I do mean always, make errors (also called bugs) in your code. You might misspell a function, include an extra comma, or some days…R just won’t want to work with you (again, see section Why R is like a Relationship)' lol
+https://bookdown.org/ndphillips/YaRrr/debugging.html
+
+```{r}
+# install data set used in this book 
+#install.packages('yarrr')
+#library(yarrr)
+
+# exploring data
+head(pirates)
+names(pirates)
+
+```
+
+3.2 Descriptive statistics
+```{r}
+mean(pirates$age)
+max(pirates$height)
+
+# how many pirates are there of each sex
+table(pirates$sex)
+
+# calculate statistics for different groups of pirates
+
+# calculate mean age, for each sex
+aggregate(formula = age ~ sex, data = pirates, FUN = mean)
+
+```
+
+3.3 Plotting 
+```{r}
+plot(x = pirates$height,
+     y = pirates$weight,
+     main = 'scatterplot of pirate data!',
+     xlab = 'height (cm)',
+     ylab = 'weight (kg)',
+     pch = 16,
+     col = gray(0.0, 0.1))
+grid() # add gridlines
+
+# create linear regression model
+model <- lm(formula = weight ~ height,
+            data = pirates)
+abline(model, col = 'blue') # add regression to plot
+
+# scatterplots are great for showing relationship between two continuous variables
+```
+3.4 Hypothesis tests
+```{r}
+# age by headband t-test
+
+t.test(formula = age ~ headband,
+       data = pirates, 
+       alternative = 'two.sided')
+
+# significant correlation between a pirate's height and weight?
+cor.test(formula = ~ height + weight,
+         data = pirates)
+# ^ yes, pvalue is 2.2e-16
+
+# ANOVA testing between number of tattoos pirates have based on their favorite sword
+tat.sword.lm <- lm(formula = tattoos ~ sword.type, 
+                   data = pirates)
+anova(tat.sword.lm)
+```
+
+3.5 Regression analysis
+```{r}
+# regression analysis to see if pirate's age, weight, tatoos predicts how many treasure chests they've found
+
+tchests.model <- lm(formula = tchests ~ age + weight + tattoos, data = pirates)
+
+summary(tchests.model)
+```
+
+3.6 Bayesian statistics
+```{r}
+#install.packages('BayesFactor')
+#library(BayesFactor)
+
+# bayesian version of t-tests
+
+ttestBF(formula = age ~ headband,
+        data = pirates)
+
+# we got bayes factor of 0.12, which is strong evidence for the null hypothesis (mean age does not differ between pirates with or without headbands)
+```
+
+4.4 Objects and functions
+Almost everything in R is either an object or function
+object <- function()
+
+object = thing, like number, dataset; different shapes and sizes
+
+function = procedure that takes one or more objects are arguments (aka inputs), does someting with those objects, then returns a new object
+
+4.4.1 Numbers vs characters
+numbers = 1, 10, 3.14
+charactes = 'madisen', 'brian', '10'
+
+
+5.1 Scalers
+scalar: an object that is just a single value like a number or a name. 
+```{r}
+# numeric scalers, you can do basic arithmetic operations
+a <- 100
+b <- 3 / 100
+c <- (a + b) / b
+
+# character scales aka STRINGS
+d <- 'ship'
+e <- 'cannon'
+
+```
+
+5.2 Vectors
+vector: object that is a combination of several scalars stored as a single object
+
+Vectors contain either numbers or characters, not both
+```{r}
+# different ways to create vectors
+
+# numeric vectors
+one <- c(1,5,9)
+two <- 1:9
+three <- seq(0,6,2)
+four <- rep(c(7,8), times = 2, each = 2, length.out = 90)
+print(four) # length.out is desired length of the final sequence
+
+# character vectors
+char.vec <- c('ceci', 'nest', 'pas', 'une', 'pipe')
+char.vec
+```
+
