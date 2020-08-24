@@ -1,0 +1,104 @@
+---
+title: "Phenology NIH"
+author: "sbsambado"
+date: "8/19/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r Kurtenbach 2006}
+rnaught <- function(t, x, params) {
+  
+  N = x[1]
+  H = x[2]
+  R0 = x[3]
+  
+  f = params[1]
+  B = params[2]
+  p = params[3]
+  n = params[4]
+  F = params[5]
+  r = params[6]
+  h = params[7]
+  
+  R0 = (N*f*B*(p^n)*F)/(H*(r+h))
+  
+  return(list(R0))
+}
+  N0 = 100
+  H0 = 20
+  
+  initial_values = c(N = N0, H = H0)
+  f = .8
+  B = .9
+  p = .7
+  n = .3
+  F = .4
+  r = .1
+  h = .01
+  
+  parameters = c(f, B, p, n, F, r, h)
+  
+  times = seq(0, 60, length.out = 10000)
+  
+  results = lsoda(initial_values, times, rnaught, parameters)
+  head(results)
+
+  Ncol = 'red'
+  Hcol = 'blue'
+  
+  plot(x = results[,'time'], y = results[,'N'], type = 'l', col = Ncol)
+  
+
+
+```
+
+```{r}
+library(readr)
+gw <- read.csv("~/Desktop/Questing_Ticks_NIH.csv")
+#View(gw)
+
+library(tidyverse)
+
+
+gw %>%
+  select(state, nymph, bb_pos_nymphs) %>%
+  mutate(rate = bb_pos_nymphs / nymph *100)
+
+
+gw$rate = (gw$bb_pos_nymphs / gw$nymph)*100
+
+
+
+plot(rate ~ state, data = gw,
+     xlab = 'state', ylab = '% BB positive',
+     main = 'Gatewood 2009')
+
+region = factor(gw$state, levels = c('MN','WI','IL', 'MI','IN',
+                                'ME','NY','NJ','PA', 'MD','VT'))
+
+plot(rate ~ region, data = gw,
+     xlab = 'state', ylab = '% BB positive',
+     main = 'Gatewood 2009')
+abline(v = 5.5, col = 'blue')
+text(x = 3, y = 55, "Midwest", font = 2)
+text(x = 8.6, y = 55, "Northeast", font = 2)
+
+levels(gw$state) <- list(midwest = c('MN', 'WI', 'IL', 'IN','MI'),
+                         northeast = c('ME','NJ','NY','PA', 'MD','VT'))
+
+gw$percent = gw$bb_pos_nymphs / gw$nymph *100
+boxplot(gw$percent ~ gw$state)
+
+color = rep(NA, length = length(gw$state))
+color[which(gw$state == 'IL')] = 'purple'
+
+
+
+
+```
+
