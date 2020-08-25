@@ -102,3 +102,86 @@ color[which(gw$state == 'IL')] = 'purple'
 
 ```
 
+```{r 2018 sfsu}
+library(readr)
+qt18 <- read.csv("~/Desktop/qt18.csv")
+
+
+qt<-select(qt18, -3,  - 6, - 7, - 8, -9, -10)
+names(qt) <- c('site', 'collection', 'stage', 'infection')
+View(qt)
+
+plot(qt$collection, qt$stage,
+     xlab = 'collection date', ylab = 'proportion of life stage')
+
+library(dplyr)
+larval = subset(qt, stage == 'L')
+View(larval)
+
+nymphal = subset(qt, stage == 'N')
+adult = subset(qt, stage == 'A')
+
+par(mfrow = c(3,1))
+plot(larval$collection, 
+     main = 'Larvae')
+plot(nymphal$collection, main = 'Nymphs')
+plot(adult$collection, main = 'Adults')
+par(mfrow = c(1,1))
+
+bm_inf = subset(qt, infection == 'B. miyamotoi')
+
+
+
+count(qt, stage == 'L') # 901
+count(qt, stage == 'N') # 283
+count(qt, stage == 'A') # 85
+
+count(qt, infection == 'B. miyamotoi') #25
+count(qt, infection == 'B. burgdorferi') #28
+
+count(qt, stage == 'L' & infection == 'B. miyamotoi') # 1
+count(qt, stage == 'N' & infection == 'B. miyamotoi') # 12
+count(qt, stage == 'A' & infection == 'B. miyamotoi') # 12
+
+
+count(qt, stage == 'N' & infection == 'B. burgdorferi') #26
+count(qt, stage == 'A' & infection == 'B. burgdorferi') #2
+
+print(c(
+bm_n = (12/283)*100,
+bb_n = (26/283)*100,
+
+bm_a = (12/85)*100,
+bb_a = (2/85)*100))
+```
+
+```{r NEON upload data MI and MD}
+library(devtools)
+#install.packages("neonUtilities")
+library(neonUtilities)
+#install.packages('raster')
+library(raster)
+devtools::install_github('NEONScience/NEON-geolocation/geoNEON')
+#install.packages('BiocManager')
+BiocManager::install('rhdf5')
+
+#install.packages('geoNEON')
+library(geoNEON)
+library(rhdf5)
+options(stringsAsFactors= FALSE)
+stackByTable("~/Desktop/NEON_pathogens-tick.zip")
+
+tick <-loadByProduct(dpID = 'DP1.10092.001', site = 'all',package = 'expanded')
+
+str(tick)
+View(tick)
+as.data.frame(tick)
+readTableNEON(tick, varFile = "~/random-code")
+?readTableNEON
+list2env(tick, .GlobalEnv) # extrac each table from list to work as independent object
+View(tick$tck_pathogen) #list of data frames
+
+help("readTableNEON")
+
+```
+
