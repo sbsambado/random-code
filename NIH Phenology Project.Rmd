@@ -547,64 +547,66 @@ ggplot(long, aes(x = site_ID, y = prev, color = borrelia))+
 ```{r almost full graph}
 # all three reigions
 full 
+
+
+
+## trying to convert data
 region = factor(long$region, levels = c('northeast', 'midwest','westcoast'), 
                      labels = c('Northeastern', 'Midwestern', 'Western'))
 
 region = factor(miyamotoi$region, levels = c('northeast', 'midwest','westcoast'), 
                      labels = c('Northeastern', 'Midwestern', 'Western'))
+regionfactor <- as.factor(miyamotoi$region)
+class(regionfactor)
 
 
-miyamotoi$region = with(region, reorder('Northeastern', 'Midwestern', 'Western'))
+
+#miyamotoi$region = with(region, reorder('Northeastern', 'Midwestern', 'Western'))
+#View(miyamotoi)
+
+miyamotoi$region <- factor(miyamotoi$region, levels = c('Northeastern', 'Midwestern', 'Western'))
+
+region <- as.character('miyamotoi$region')
+
+miyamotoi <- subset(LoNger, borrelia == 'miyamotoi')
+LoNger <- read.csv("~/Desktop/longformat_questingticks.csv")
 View(miyamotoi)
 
-bbminmax <-ggplot(data = miyamotoi) +
+
+bmminmax <-ggplot(data = miyamotoi)+
   stat_summary(
     mapping = aes(x = region, y = prev),
     fun.min = min, 
     fun.max = max,
-    fun = median
-  ) +
+    fun = median) +
   theme_classic() +
   xlab('Regions') + ylab('Prevalence of Questing Ticks') +
-  ggtitle('Range of B. miyamotoi Infection Prevalence')
+  ggtitle('Range of B. miyamotoi (Min/Max)')+ 
+  theme(axis.text.x = element_text(face = 'bold', size = 12),
+                axis.title = element_text(face = 'bold'),
+                plot.title = element_text(face = 'bold', hjust = 0.5)) 
 
-
-bmminmax<-ggplot(data = burgdorferi) +
+bbminmax<-ggplot(data = burgdorferi) +
   stat_summary(
     mapping = aes(x = region, y = prev),
     fun.min = min, 
     fun.max = max,
-    fun = median
-  ) +
+    fun = median) +
   theme_classic() +
   xlab('Regions') + ylab('Prevalence of Questing Ticks') +
-  ggtitle('Range of B. burgdorferi Infection Prevalence')
+  ggtitle('Range of B. burgdorferi (Min/Max)')+ 
+  theme(axis.text.x = element_text(face = 'bold', size = 12),
+                axis.title = element_text(face = 'bold'),
+                plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+  
+minmax <- ggarrange(bmminmax, bbminmax+ rremove('ylab'),
+          ncol = 2)
 
 
-ggarrange(bmminmax, bbminmax)
-library(dplyr)
 
-miyamotoi$region = with(miyamotoi, reorder())
-
-
-minmaxBM %>%
-  arrange(prev) %>%
-  mutate(region = factor(region, levels = region)) %>%
-  ggplot(aes(x = region, y = prev))
-
-
-## try to comine but with no luck
-ggplot(data = long) +
-  stat_summary(
-    mapping = aes(x = region, y = prev),
-    fun.min = min, 
-    fun.max = max,
-    fun = median
-  ) +
-  theme_classic() +
-  xlab('Regions') + ylab('Prevalence of Questing Ticks') +
-  ggtitle('Range of B. miyamotoi Infection Prevalence') 
-
+full
+minmax
 ```
 
 
