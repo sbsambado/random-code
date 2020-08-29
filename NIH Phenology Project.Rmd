@@ -155,6 +155,459 @@ bm_a = (12/85)*100,
 bb_a = (2/85)*100))
 ```
 
+```{r questing NIH}
+
+library(readr)
+official <- read.csv("~/Desktop/OFFICIAL_QUESTING_TICKS_SURVEILLENCE.csv")
+View(official)
+?subset
+
+Official <- subset(official, region != "midatlantic")
+
+official <-Official
+View(official)
+
+str(official$region[official$region == 'westcoast']) #9
+str(official$region[official$region == 'midwest']) # 13
+str(official$region[official$region == 'northeast']) #17
+
+qqPlot(official$bm_prev) # some outliers
+
+bmprev <- official$bm_prev
+bbprev <- official$bb_prev
+
+prev <- c(bmprev, bbprev)
+View(prev)
+
+# p < 0.05 data is not normally distributed 
+with(official, shapiro.test(bmprev[region == 'westcoast']))
+with(official, shapiro.test(bmprev[region == 'northeast']))
+
+west <- subset(official, region == 'westcoast')
+mid <- subset(official, region == 'midwest')
+north <- subset(official, region == 'northeast')
+
+t.test(west$bb_prev, north$bb_prev)
+t.test(west$bm_prev, north$bm_prev)
+t.test(west$bm_prev, mid$bm_prev)
+
+wilcox.test(bm_prev ~ tot_nymph, data = official)
+
+
+library(multcomp)
+prev1 <- aov(official$bb_prev~official$region, data = official)
+plot(prev1)
+
+res=prev1$residuals
+shapiro.test(res)
+
+leveneTest(bb_prev~region, official)
+summary(prev1)
+TukeyHSD(prev1)
+
+post_hoc <- glht(prev1, linfct = mcp(region = 'Tukey'))
+
+plot(official$tot_nymph, official$bm_prev)
+plot(official$bm_prev~official$tot_nymph, xlim = c(1,600))
+glm(official$bm_prev~official$tot_nymph)
+plot(aov(official$bm_prev~official$region))
+
+
+par(mfrow = c(3,1))
+hist(official$bm_prev[official$region == 'westcoast'])
+hist(official$bm_prev[official$region == 'midwest'])
+hist(official$bm_prev[official$region == 'northeast'])
+
+par(mfrow = c(3,1))
+hist(official$bb_prev[official$region == 'midwest'])
+hist(official$bb_prev[official$region == 'westcoast'])
+hist(official$bb_prev[official$region == 'northeast'])
+
+official$region<- factor(official$region, levels = c('westcoast', 'midwest','northeast'))
+
+par(mfrow = c(1,2))
+boxplot(official$bm_prev ~ official$region,
+        xlab = 'region', ylab = 'B. miyamotoi prevalence', main = 'Bm in Nymphs')
+boxplot(official$bb_prev ~ official$region,
+        xlab = 'region', ylab = 'B. burgdorferi prevalence', main = 'Bb in Nymphs')
+
+par(mfrow = c(1,2))
+boxplot(official$tot_nymph ~ official$region,
+        xlab = 'region', ylab = 'total questing nymphs', main = 'Tot Nymphs')
+boxplot(official$tot_adult ~ official$region,
+        xlab = 'region', ylab = 'total questing adults', main = 'Tot Adults')
+
+library(ggplot2)
+library(reshape2)
+
+region.m <- melt(official, id.var = 'region')
+region.m
+
+west$borreliatype <- cbind(west$bm_prev, west$bb_prev)
+View(west)
+
+plot(west$region, west$bm_prev, data = west)
+
+prev.lm <- lm(bm_prev ~ tot_nymph, data = official)
+summary(prev.lm)
+plot(prev.lm)
+View(west)
+
+prevalence <- cbind(west$bm_prev, west$bb_prev)
+
+
+plot(west$bm_pos, west$bm_prev)
+points(west$bb_pos ,west$bb_prev, col = 'red')
+  
+??boxplot()
+
+```
+
+```{r boxplot}
+
+dummy <- read.csv("~/Desktop/dummydata.csv") #has new adult data, need to subset stages out
+
+# separate nymphs
+nymphdummy <- subset(dummy, tickstage == 'nymph')
+
+westernN <- subset(nymphdummy, region == 'westcoast')
+middleN <- subset(nymphdummy, region == 'midwest')
+northernN <- subset(nymphdummy, region == 'northeast')
+
+View(northernN)
+
+wnoEisen <- westernN[-c(5, 15), ]
+
+
+
+middle <- subset(dummy, region == 'midwest')
+northern <- subset(dummy, region == 'northeast')
+
+
+
+
+par(mfrow = c(1,3))
+boxplot(prev ~ borreliatype, data = wnoEisen,
+        col = c('blue', 'maroon'),
+        main = 'Western US',
+        ylab = 'Nymphal Borrelia Infection',
+        xlab = 'Borrelia type')
+text(x = 2, y = 9, labels = c('N = 8,497'), col = 'red', cex = 1.4)
+#par(cex.lab = 1.5)
+
+boxplot(prev ~ borreliatype, data = middleN,
+        col = c('blue', 'maroon'),
+        main = 'Midwestern US',
+        ylab = 'Nymphal Borrelia Infection',
+        xlab = 'Borrelia type')
+text(x = 2, y = 29.7, labels = c('N = 4,136'), col = 'red', cex = 1.4)
+#par(cex.lab = 1.5)   
+
+boxplot(prev ~ borreliatype, data = northernN,
+        col = c('blue', 'maroon'), main = 'Northeastern US',
+        ylab = 'Nymphal Borrelia Infection',
+        xlab = 'Borrelia type')
+text(x = 2, y = 41, labels = c('N = 4,634'), col = 'red', cex = 1.4)
+#par(cex.lab = 1.5)
+# go in to add individual points
+
+library(stats)
+mean(westernwoEisen$prev, na.rm = T)
+
+
+
+```
+
+```{r long format with site as an observation}
+
+library(readr)
+long <- read.csv("~/Desktop/longformat_questingticks.csv")
+#View(long)
+
+miyamotoi <- subset(long, borrelia == 'miyamotoi')
+burgdorferi <- subset(long, borrelia == 'burgdorferi')
+
+?getOption()
+library(lattice)
+?data.frame
+Long <-data.frame(stringsAsFactors = FALSE)
+plot(miyamotoi$site, miyamotoi$prev, n.cat = getOption('site_ID'))
+
+
+# full dataset by site favet by state
+ggplot(data = long) +
+  geom_point(mapping = aes(x = site_ID, y = prev, color = borrelia)) +
+  facet_wrap(~ state, nrow = 2)
+
+ggplot(data = long) +
+  geom_point(mapping = aes(x = site_ID, y = prev, color = borrelia), position = 'jitter') +
+  facet_wrap(~ region, nrow = 3) 
+
+# full dataset by region
+ggplot(data = long) +
+  geom_point(mapping = aes(x = region, y = prev, color = borrelia))
+
+# miyamotoi dataset by lifestage
+ggplot(data = miyamotoi) +
+  geom_point(mapping = aes(x = site_ID, y = prev, color = lifestage))
+
+
+# histogram
+ggplot(data = long) +
+  geom_bar(mapping = aes(x = prev, y = stat(prop), group = 1))
+
+# max min of miyamotoi
+ggplot(data = miyamotoi) +
+  stat_summary(
+    mapping = aes(x = region, y = prev),
+    fun.ymin = min, 
+    fun.ymax = max,
+    fun.y = median
+  )
+
+ggplot(data = burgdorferi) +
+  stat_summary(
+    mapping = aes(x = region, y = prev),
+    fun.ymin = min, 
+    fun.ymax = max,
+    fun.y = median
+  )
+
+# coordflip is a nicer way of visuallizing all the sites
+ggplot(data = long, mapping = aes(x = site, y = prev)) +
+  geom_boxplot() +
+  coord_flip()
+
+ggplot(data = long, mapping = aes(x = state, y = prev)) +
+  geom_boxplot() +
+  coord_flip()
+# miyamotoi
+ggplot(data = miyamotoi, mapping = aes(x = state, y = prev)) +
+  geom_boxplot() +
+  coord_flip()
+# burgdorferi
+ggplot(data = burgdorferi, mapping = aes(x = state, y = prev)) +
+  geom_boxplot() +
+  coord_flip()
+
+
+# miyamotoi and nymphs
+bmN <- filter(long, borrelia == 'miyamotoi' & lifestage == 'nymph')
+# miyamotoi and adult
+bmA <- filter(long, borrelia == 'miyamotoi' & lifestage == 'adult')
+# burgdorferi and nymphs
+bbN <- filter(long, borrelia == 'burgdorferi' & lifestage == 'nymph')
+# burgdorferi and nymphs
+bbA <- filter(long, borrelia == 'burgdorferi' & lifestage == 'adult')
+
+ggplot(data = bmN, mapping = aes(x = site, y = prev)) +
+  geom_point()
+ggplot(data = bbN, mapping = aes(x = site, y = prev)) +
+  geom_point()
+
+ggplot(data = long) +
+  geom_point(mapping = aes(x = site_ID, y = prev, color = borrelia)) +
+  facet_wrap(~ state, nrow = 2)
+
+## shows difference of bb and bm at each site across region
+#reorder regions
+long$region = factor(long$region, levels = c('northeast', 'midwest','westcoast'), 
+                     labels = c('Northeastern', 'Midwestern', 'Western'))
+miyamotoi$region = factor(long$region, levels = c('northeast', 'midwest','westcoast'), 
+                     labels = c('Northeastern', 'Midwestern', 'Western'))
+
+burgdroferi$region = factor(long$region, levels = c('northeast', 'midwest','westcoast'), 
+                     labels = c('Northeastern', 'Midwestern', 'Western'))
+
+# rename facet label for region variable
+region.labs <- c('northeast', 'midwest','westcoast')
+names(region.labs) <- c('Northeastern', 'Midwestern', 'Western')
+
+
+################# GRAPH I"M WORKING WITH
+
+p<-ggplot(data = long, aes(x = site_ID, y = prev, group = borrelia, color = borrelia)) +
+  facet_wrap(~region, nrow = 3, scales = 'free_y') +
+  geom_line() +
+  geom_point()+
+  geom_text(aes(label = total_ticks, hjust = 1.8, vjust = 0), size = 1.4) +
+  xlab('Individual Sites') + ylab('Prevalence of Questing Ticks') +
+  theme(panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(color = 'black'),
+        axis.text.x = element_text(angle = 45)) +
+  theme_classic()
+
+p + theme(axis.text.x = element_text(angle = 90, size = 7))
+
+
+### no facet wrap
+p<-ggplot(data = long, aes(x = region, y = prev, group = borrelia, color = borrelia)) +
+  geom_boxplot() +
+  geom_text(aes(label = total_ticks, hjust = 1.8, vjust = 0), size = 1.4) +
+  xlab('Individual Sites') + ylab('Prevalence of Questing Ticks') +
+  theme(panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(color = 'black'),
+        axis.text.x = element_text(angle = 90)) +
+  theme_classic()
+
+p + theme(axis.text.x = element_text(angle = 90, size = 7)) + theme(leg)
+
+##### GOOD GRAPH
+
+### separating into regions with individual sites
+NE <- filter(long, region == 'Northeastern')
+
+n <-ggplot(data = NE, aes(x = site_ID, y = prev, group = borrelia, color = borrelia))+
+  geom_line()+
+  geom_point(aes(shape = lifestage))+
+  geom_text(aes(label = total_ticks, hjust = 1.8, vjust = 0), size = 2) +
+  xlab('Individual Sites') + ylab('Prevalence of Questing Ticks') +
+  theme(panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(color = 'black'),
+        axis.text.x = element_text(angle = 90)) +
+  theme_classic()+
+  ggtitle('Northeastern US')
+
+ne <- n + theme(axis.text.x = element_text(angle = 90, size = 7),
+                axis.title = element_text(face = 'bold'),
+                plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+#MW <- filter(long, region == 'Midwestern')
+
+m <-ggplot(data = MW, aes(x = site_ID, y = prev, group = borrelia, color = borrelia))+
+  geom_line()+
+  geom_point(aes(shape = lifestage)) +
+  geom_text(aes(label = total_ticks, hjust = 1.8, vjust = 0), size = 2) +
+  xlab('Individual Sites') + ylab('Prevalence of Questing Ticks') +
+  theme(panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(color = 'black'),
+        axis.text.x = element_text(angle = 90)) +
+  theme_classic()+
+  ggtitle('Midwestern US')
+
+mw <- m + theme(axis.text.x = element_text(angle = 90, size = 7),
+                axis.title = element_text(face = 'bold'),
+                plot.title = element_text(face = 'bold', hjust = 0.5)) 
+wc
+
+WC <- filter(long, region == 'Western')
+
+w <-ggplot(data = WC, aes(x = site_ID, y = prev, group = borrelia, color = borrelia))+
+  geom_line()+
+  geom_point(aes(shape = lifestage)) +
+  geom_text(aes(label = total_ticks, hjust = 1.8, vjust = 0), size = 2) +
+  xlab('Individual Sites') + ylab('Prevalence of Questing Ticks') +
+  theme(panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(color = 'black'),
+        axis.text.x = element_text(angle = 90)) +
+  theme_classic() +
+  ggtitle('Western US')
+
+wc <- w + theme(axis.text.x = element_text(angle = 90, size = 7),
+                axis.title = element_text(face = 'bold'),
+                plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+par(mfrow = c(3,1))
+ne
+mw
+wc
+
+library(ggpubr)
+
+## place all three plots together
+ggarrange(ne,mw,wc, nrow = 1, common.legend = TRUE)  
+  
+install.packages('gridExtra')
+library(gridExtra)
+library(ggpubr)
+full <-ggarrange(ne + rremove('legend'), 
+          mw + rremove('legend') + rremove('ylab'), 
+          wc + rremove('ylab'),
+          ncol = 3, common.legend = TRUE, legend = 'bottom')
+
+#########################
+# add CI 95%, need to fix code
+sts <- summarySE(long, measurevar = 'prev', groupvars = c('burgdorferi', 'miyamotoi'))
+ggplot(long, aes(x = site_ID, y = prev, color = borrelia))+
+    geom_errorbar(aes(ymin = prev - se, ymax = len + se), width = .1) +
+    geom_line()+
+    geom_point()
+```
+
+```{r almost full graph}
+# all three reigions
+full 
+region = factor(long$region, levels = c('northeast', 'midwest','westcoast'), 
+                     labels = c('Northeastern', 'Midwestern', 'Western'))
+
+region = factor(miyamotoi$region, levels = c('northeast', 'midwest','westcoast'), 
+                     labels = c('Northeastern', 'Midwestern', 'Western'))
+
+
+miyamotoi$region = with(region, reorder('Northeastern', 'Midwestern', 'Western'))
+View(miyamotoi)
+
+bbminmax <-ggplot(data = miyamotoi) +
+  stat_summary(
+    mapping = aes(x = region, y = prev),
+    fun.min = min, 
+    fun.max = max,
+    fun = median
+  ) +
+  theme_classic() +
+  xlab('Regions') + ylab('Prevalence of Questing Ticks') +
+  ggtitle('Range of B. miyamotoi Infection Prevalence')
+
+
+bmminmax<-ggplot(data = burgdorferi) +
+  stat_summary(
+    mapping = aes(x = region, y = prev),
+    fun.min = min, 
+    fun.max = max,
+    fun = median
+  ) +
+  theme_classic() +
+  xlab('Regions') + ylab('Prevalence of Questing Ticks') +
+  ggtitle('Range of B. burgdorferi Infection Prevalence')
+
+
+ggarrange(bmminmax, bbminmax)
+library(dplyr)
+
+miyamotoi$region = with(miyamotoi, reorder())
+
+
+minmaxBM %>%
+  arrange(prev) %>%
+  mutate(region = factor(region, levels = region)) %>%
+  ggplot(aes(x = region, y = prev))
+
+
+## try to comine but with no luck
+ggplot(data = long) +
+  stat_summary(
+    mapping = aes(x = region, y = prev),
+    fun.min = min, 
+    fun.max = max,
+    fun = median
+  ) +
+  theme_classic() +
+  xlab('Regions') + ylab('Prevalence of Questing Ticks') +
+  ggtitle('Range of B. miyamotoi Infection Prevalence') 
+
+```
+
+
 ```{r NEON upload data MI and MD}
 library(devtools)
 #install.packages("neonUtilities")
