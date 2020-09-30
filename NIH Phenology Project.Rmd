@@ -454,13 +454,12 @@ p<-ggplot(data = long, aes(x = region, y = prev, group = borrelia, color = borre
         axis.text.x = element_text(angle = 90)) +
   theme_classic()
 
-p + theme(axis.text.x = element_text(angle = 90, size = 7)) + theme(leg)
+p + theme(axis.text.x = element_text(angle = 90, size = 7))
 
 ##### GOOD GRAPH
 
 ### separating into regions with individual sites
 NE <- filter(long, region == 'Northeastern')
-
 n <-ggplot(data = NE, aes(x = site_ID, y = prev, group = borrelia, color = borrelia))+
   geom_line()+
   geom_point(aes(shape = lifestage))+
