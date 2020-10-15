@@ -1,0 +1,304 @@
+---
+title: "Effects package"
+author: "sbsambado"
+date: "10/15/2020"
+output: html_document
+---
+
+continuous predictors: income, education, women 
+factor predictor: type
+```{r}
+
+library('car')
+Prestige$type <- factor(Prestige$type, levels = c('bc', 'wc', 'prof'))
+lm1 <- lm(prestige ~ education + poly(women, 2) +
+            log(income)*type, data = Prestige)
+
+# variable women, a percentage between 0 and 100, is represented by regressors that define a polynomial of degree 2 using poly()’s default orthogonal polynomials
+
+# the formula includes an interaction between income and type, defined by multiplying the regressor for income (log(income)) by each of the regressors that represent type.
+
+S(lm1)
+# regression coefficient straightforward for predictor education, where an increase of one year of education, holding other predictors fixed, corresponds to an estimated expected increase in the response of 2.959 unites
+```
+
+A predictor effect plot summarizes the role of a selected focal predictor in a fitted regression model. 
+
+The predictorEffect() function is used to compute the appropriate summary of the regression, and then the plot() function may be used to graph the resulting object, as in the following example:
+```{r}
+library(effects)
+e1.lm1 <- predictorEffect('education', lm1)
+plot(e1.lm1)
+
+
+# This graph visualizes the partial slope for education, 
+#that for each year increase in education, the fitted prestige increases by 2.959 points, when the other predictors are held fixed. 
+
+#The intercept of the line, which is outside the range of education on the graph, affects only the height of the line, and is determined by the choices made for averaging over the fixed predictors, 
+
+#but for any choice of averaging method, the slope of the line would be the same. 
+
+#The shaded area is a pointwise confidence band for the fitted values, based on standard errors computed from the covariance matrix of the fitted regression coefficients. 
+
+#The rug plot at the bottom of the graph shows the location of the education values.
+```
+
+The minimal arguments for predictorEffect() are the quoted name of a predictor in the model followed by the fitted model object. 
+
+The essential purpose of this function is to compute fitted values from the model with education varying and all other predictors fixed at typical values 
+
+The command below displays the values of the regressors for which fitted values are computed, including a column of 1s for the intercept:
+
+The focal predictor education was evaluated by default at 50 points covering the observed range of values of education.
+
+ We use the brief() function in the car package to show only a few of the 50 rows of the matrix.
+ 
+the fixed values for the regressors for type effectively take a weighted average of the fitted values
+prestige at the three levels of type, with weights proportional to the number of cases in each level of the factor. 
+
+Thus the output gives the partial effect of education with all other predictors fixed.
+```{r}
+brief(e1.lm1$model.matrix)
+```
+
+The computed fitted values can be viewed by printing the "eff" object returned by predictor- Effect(), by summarizing the object, or by converting it to a data frame. To make the printouts more compact, we recompute the predictor effect of education with fewer values of the focal pre- dictor by specifying the focal.levels argument
+
+The values in the column education are the values the focal predictor.
+
+The predictor effect plot is simply a graph of the **fitted values** on the **vertical axis** versus the **focal predictor** on the **horizontal axis**.
+
+For a continuous focal predictor such as education, a line, in this case, a straight line, is drawn connecting the fitted values.
+
+```{r}
+e1a.lm1 <- predictorEffect("education", lm1, focal.levels=5)
+e1a.lm1
+summary(e1a.lm1)
+
+as.data.frame(e1a.lm1)
+```
+
+According to the regression model, the effect of income may depend on type due to the interaction between the two predictors, so simply averaging over type would be misleading. 
+
+Rather, we should allow both income and type to vary, fixing the other predictors at their means or other typical values. 
+```{r}
+e2.lm1 <- predictorEffect("income", lm1, focal.levels=5) 
+as.data.frame(e2.lm1)
+```
+
+To draw the predictor effects plot we recalculate the fitted values using the default focal.levels=50 to get more accurately plotted regression curves:
+
+The lines in the graph are not parallel because of the interaction between log(income) and type. 
+
+For type = "prof", the fitted values of prestige are relatively high for lower values of income, and are relatively less affected by increasing values of income.
+```{r}
+plot(predictorEffect("income", lm1),
+         lines=list(multiline=TRUE))
+
+#The focal predictor income is displayed on the horizontal axis.
+
+#There is a separate line shown for the fitted values at each level of type. 
+
+#The lines are curved rather than straight because income appears in the model in log-scale but is displayed in the predictor effect plot in arithmetic (i.e., dollar) scale.
+```
+
+
+The predictor effect plot for type uses essentially the same fitted values as the plot for income, but we now get five lines, one for each of the five (not 50) values of income selected by the predic- torEffect() function in this context:
+
+Because the horizontal axis is now a factor, 
+  the fitted values are displayed explicitly as points, 
+  and the lines that join the points are merely a visual aid representing profiles of fitted values. 
+  
+Fitted prestige increases with income for all levels of type, but, as we found before, when type = "prof", fitted prestige is relatively high for lower income.
+```{r}
+plot(predictorEffect("type", lm1), lines=list(multiline=TRUE))
+```
+
+#General Outline for Constructing Predictor Effect Plots
+
+Using the effects package to draw plots usually entails the following steps:
+
+1. Fit a regression model with a linear predictor. 
+  The package supports models created by lm(), glm(), lmer() and glmer() in the lme4 package, lme() in the nlme package, and many other regression-modeling functions (see ?Effect).
+
+
+2. The regression model created in the first step is then used as input to either predictorEffect(), to get the effects for one predictor, or predictorEffects, to get effects for one or more predictors. 
+  These functions do the averaging needed to get fitted values that will ultimately be plotted. There are many arguments for customizing the computation of the effects.
+  The two predictor effect functions call the more basic Effect() function, and almost all of the material in this vignette applies to Effect() as well.
+  
+3. Use the generic plot() function to draw a graph or graphs based on the object created in Step 2.
+
+
+#How predictorEffect() Chooses Conditioning Predictors
+
+Suppose that you select a focal predictor for which you want to draw a predictor effect plot. The
+predictorEffect() function divides the predictors in a model formula into three groups:
+
+1. The focal predictor.
+
+2. The conditioning group, consisting of all predictors with at least one interaction in common with the focal predictor.
+
+3. The fixed group, consisting of all other predictors, that is, those with no interactions in common with the focal predictor.
+
+
+#The predictorEffects() Function
+
+computes the values needed for one or more predictor effect plots, and by default for all of the predictors in the model.
+
+The plots for income and type have a separate panel for each level of the conditioning variable because the default argument lines=list(multiline=FALSE) was implicitly used. Confidence bounds are shown by default when multiline=FALSE.
+
+The resulting object eall.lm1 is a list with four elements, where eall.lm1[[1]] is the summary for the first predictor effect plot, eall.lm1[[2]] for the second plot
+
+```{r}
+eall.lm1 <- predictorEffects(lm1)
+plot(eall.lm1)
+```
+
+The following equivalent commands draw the same array of predictor effect plots:
+```{r}
+
+plot(eall.lm1)
+plot(predictorEffects(lm1))
+plot(predictorEffects(lm1, ~ income + education + women + type))
+
+#If you want only the predictor effect plots for type and education, in that order, you could enter 
+plot(predictorEffects(lm1, ~ type + education))
+
+# only women
+plot(predictorEffects(lm1, ~ women)) 
+plot(predictorEffects(lm1)[[3]])
+plot(predictorEffect("women", lm1))
+```
+
+
+Options for focal predictor (Y outcome) and predictors in conditioning groups (X inputs)
+```{r}
+e3.lm1 <- predictorEffect("type", lm1) 
+plot(e3.lm1, lines=list(multiline=TRUE))
+plot(e3.lm1, lines=list(multiline=FALSE)) # the default
+
+
+e3.lm1 <- predictorEffect("type", lm1,
+xlevels=list(income=c(5000, 15000, 25000))) 
+
+plot(e3.lm1, lines=list(multiline=TRUE),
+ confint=list(style="bars"))
+
+plot(e3.lm1,
+         lines=list(multiline=FALSE), # the default
+         lattice=list(layout=c(3, 1)))
+```
+
+
+#The axes Group: Specify Axis Characteristics
+
+The x sub-argument is itself a list with three elements: 
+
+The sub-arguments rotate and rug set the rotation angle for the tick labels and suppress the rug plot, respectively. 
+
+The additional sub-argument is a list called income, the name of the focal predictor. If you were drawing many predictor effect plots you would supply one list named for each of the focal predictors. 
+
+All of the sub-arguments for income are displayed in the example code above. 
+
+The sub-argument transform=list(trans=log, inverse=exp) specifies how to transform the x-axis. 
+
+The ticks and lim sub-arguments set the tick marks and range for the horizontal axis.
+```{r}
+lm2 <- lm(log(prestige) ~ log(income) + education + type, Prestige)
+
+plot(predictorEffects(lm2, ~ income))
+
+#The plot is curved because the predictor income is represented by its logarithm in the model formula, but the default predictor effect plot uses the predictor income, not the regressor log(income), on the horizontal axis. The x sub-argument can be used transform the horizontal axis, for example to replace income by log(income):
+
+plot(predictorEffects(lm2, ~ income),
+ axes=list(
+ x=list(income=list(transform=list(trans=log, inverse=exp)))))
+
+
+plot(predictorEffects(lm2, ~ income),main="Transformed Plot",
+axes=list(grid=TRUE,x=list(rotate=30,
+                           rug=FALSE,
+income=list(transform=list(trans=log, inverse=exp),
+            lab="income, log-scale", ticks=list(at=c(2000, 5000, 10000, 20000)), lim=c(1900, 21000)))))
+```
+
+
+# Mixed models
+In that section, we fit a linear mixed-effects model to data from the Blackmore data frame in the carData package. 
+
+Blackmore includes longitudinal data on amount of exercise for girls hospitalized for eating disorders and for similar control subjects who were not hospitalized. We transformed the response variable in the model, hours of exercise, using a transformation in a modified Box-Cox power family that allows zero or negative responses
+
+```{r}
+library(lme4)
+
+Blackmore$tran.exercise <- bcnPower(Blackmore$exercise,
+ lambda=0.25, gamma=0.1)
+
+mm1 <- lmer(tran.exercise ~ I(age - 8)*group +
+ (I(age - 8) | subject), data=Blackmore)
+
+#This model, with numeric predictor age and factor predictor group, is a linear mixed model with random intercepts and slopes for age that vary by subject. The response variable is a transformation of exercise similar to the fourth root with adjustment for zero values
+
+e1.mm1 <- predictorEffect("age", mm1)
+plot(e1.mm1, lines=list(multiline=TRUE), confint=list(style="auto"))
+
+#The plot clearly shows the difference in the average age trajectory between the "control" and "patient" groups, with the fitted response for the latter having a larger slope. 
+
+#The graph is hard to decode, however, because the vertical axis is approximately in the scale of the fourth-root of hours of exercise, so untransforming the response may produce a more informative plot. 
+
+#Because the bcnPower() transformation is complex, the car package includes the function bcnPowerInverse() to reverse the transformation:
+
+f.trans <- function(x) bcnPower(x, lambda=0.25, gamma=0.1)
+f.inverse <- function(x) bcnPowerInverse(x, lambda=0.25, gamma=0.1)
+
+plot(e1.mm1, lines=list(multiline=TRUE),confint=list(style="auto"),
+axes=list(x=list(age=list(lab="Age (years)")),
+y=list(transform=list(trans=f.trans, inverse=f.inverse), type="response",
+lab="Exercise (hours/week)")), lattice=list(key.args=list(x=.20, y=.75, corner=c(0, 0),padding.text=1.25)),main="")
+```
+
+
+#3.1.3 y: Vertical Axis Specification for Generalized Linear Models
+
+Transforming the vertical axis for generalized linear models also uses the y sub-argument to the axes argument. You typically do not need to specify the transform sub-argument because plot() obtains the right functions from the regression model’s family component. 
+
+The type sub-argument has the same three possible values as for linear models, but their interpretation is somewhat different:
+
+1. Predictor effect plots in type="link" scale have a predictor on the horizontal axis and the vertical axis is in the scale of the linear predictor. For logistic regression, for example, the vertical axis is in log-odds (logit) scale. For Poisson regression with the log-link, the vertical axis is in log-mean (log-count) scale.
+
+2. Predictor effect plots in type="response" or mean scale are obtained by “untransforming” the y axis using the inverse of the link function. For the log-link, this corresponds to transforming the y axis and plotting exp(y). For logistic regression, y = log[p/(1 − p)] and, solving for p, p = exp(y)/[1 + exp(y)] = 1/[1 + exp(−y)], so the plot in mean scale uses 1/[1 + exp(−y)] on the vertical axis.
+
+3. We also provide a third option, type="rescale", which plots in linear predictor (e.g., logit) scale, but labels the tick marks on the vertical axis in mean (e.g., probability) scale. This third option, which retains the linear structure of the model but labels the vertical axis on the usually more familiar mean scale, is the default.
+
+
+```{r}
+library(alr4)
+data("Blowdown", package="alr4")
+gm1 <- glm(y ~ log(d) + s + spp, family=binomial, data=Blowdown)
+plot(predictorEffects(gm1),axes=list(grid=TRUE, x=list(rug=FALSE, rotate=35)))
+
+```
+Interpretation of GLM predictor effect plots in link scale is similar to predictor effect plots for linear models, and all the modifications previously described can be used for these plots. Because the default is type="rescale", the vertical axis is in linear predictor scale, which is the log-odds or logit for this logistic regression example, but the vertical axis labels are in mean (probability) scale, so the tick-marks are not equally spaced.
+
+possible values of the argument type:
+```{r}
+e1.gm1 <- predictorEffect("spp", gm1)
+
+plot(e1.gm1, main="type='rescale'", axes=list(y=list(type="rescale",lab="logit scale, probability labels"),
+x=list(rotate=30),
+grid=TRUE))
+
+
+plot(e1.gm1, main="type='link'",
+axes=list(y=list(type="response", grid=TRUE,
+                 lab="probabilty scale, probability labels"),
+          x=list(rotate=30),
+          grid=TRUE))
+
+
+plot(e1.gm1, main="type='response'",axes=list(y=list(type="response", grid=TRUE,
+                 lab="probabilty scale, probability labels"),x=list(rotate=30),
+grid=TRUE))
+
+```
+
+

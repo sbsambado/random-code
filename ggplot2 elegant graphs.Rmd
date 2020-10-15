@@ -1,0 +1,865 @@
+---
+title: "ggplot2 Elegant graphics"
+author: "sbsambado"
+date: "9/30/2020"
+output: html_document
+---
+
+
+color and shape = categorical values
+size = continuous variables
+
+# geom_smooth
+
+geom_smooth(span = 0.2) 
++ span parameter ranges from 0 (very wiggly) to 1 (not wiggly)
+
+```{r}
+library(ggplot2)
+mpg
+
+
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() + 
+  geom_smooth(span = 0.2)
+#> `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() + 
+  geom_smooth(span = 1)
+```
+
+geom_smooth(method = "gam", fomular = y ~ s(x)) for  generalised additive model by the mgcv packages
++ formula could also be y ~ s(x, bs = 'cs')
+```{r}
+library(mgcv)
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() + 
+  geom_smooth(method = "gam", formula = y ~ s(x))
+
+```
+
+geom_smooth(method = 'lm')
++ linear best fit
+```{r}
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() + 
+  geom_smooth(method = "lm")
+```
+
+# other geoms
+
+Jittering, geom_jitter(), adds a little random noise to the data which can help avoid overplotting.
+
++ jittered plots show every point but only work with relatively small datasets
++ can control size, color, shape
+
+```{r}
+ggplot(mpg, aes(drv, hwy)) + geom_jitter()
+```
+
+
+Boxplots, geom_boxplot(), summarise the shape of the distribution with a handful of summary statistics.
+
++ summarise the bulk of the distribution with only five numbers
++ can control color or fill
+```{r}
+ggplot(mpg, aes(drv, hwy)) + geom_boxplot()
+```
+
+
+Violin plots, geom_violin(), show a compact representation of the “density” of the distribution, highlighting the areas where more points are found.
+
++ give the richest display, but rely on the calculation of a density estimate, which can be hard to interpret.
++ can control color or fill
+```{r}
+ggplot(mpg, aes(drv, hwy)) + geom_violin()
+```
+
+
+## Histograms and frequency polygons
+
++ Histograms and frequency polygons show the distribution of a single numeric variable.
++ provide more information about the distribution of a single group than boxplots do, at the expense of needing more space.
+
++ An alternative to the frequency polygon is the density plot, geom_density(). I’m not a fan of density plots because they are harder to interpret
+
++ They also make assumptions that are not true for all data, namely that the underlying distribution is continuous, unbounded, and smooth.
+
+
+```{r}
+ggplot(mpg, aes(hwy)) + geom_histogram()
+#> `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+ggplot(mpg, aes(hwy)) + geom_freqpoly()
+```
+
++  very important to experiment with the bin width. The default just splits your data into 30 bins, which is unlikely to be the best choice.
+
+```{r}
+
+ggplot(mpg, aes(hwy)) + 
+  geom_freqpoly(binwidth = 2.5)
+ggplot(mpg, aes(hwy)) + 
+  geom_freqpoly(binwidth = 1)
+```
+
++ compare the distributions of different subgroups, you can map a categorical variable to either fill (for geom_histogram()) or colour (for geom_freqpoly()).
+
+```{r}
+ggplot(mpg, aes(displ, colour = drv)) + 
+  geom_freqpoly(binwidth = 0.5)
+
+ggplot(mpg, aes(displ, fill = drv)) + 
+  geom_histogram(binwidth = 0.5) + 
+  facet_wrap(~drv, ncol = 1)
+```
+
+
+## Bar charts
+
+two rather different plots that are both commonly called bar charts
+
++ The below form expects you to have unsummarised data, and each observation contributes one unit to the height of each bar.
+
+```{r}
+ggplot(mpg, aes(manufacturer)) + 
+  geom_bar()
+```
+
++  The other form of bar chart is used for presummarised data.
++ To display this sort of data, you need to tell geom_bar() to not run the default stat which bins and counts the data. 
++ I think it’s even better to use geom_point() because points take up less space than bars, and don’t require that the y axis includes 0.
+
+```{r}
+drugs <- data.frame(
+  drug = c("a", "b", "c"),
+  effect = c(4.2, 9.7, 6.1)
+)
+
+ggplot(drugs, aes(drug, effect)) + geom_bar(stat = "identity")
+ggplot(drugs, aes(drug, effect)) + geom_point()
+```
+
+
+
+## Time series with line and path plots
+
++ Line plots join the points from left to right,
++  Line plots usually have time on the x-axis, showing how a single variable has changed over time.
+
++ path plots join them in the order that they appear in the dataset (in other words, a line plot is a path plot of the data sorted by x value)
++ Path plots show how two variables have simultaneously changed over time, with time encoded in the way that observations are connected.
+
++ The first shows the unemployment rate while the second shows the median number of weeks unemployed.
+```{r}
+ggplot(economics, aes(date, unemploy / pop)) +
+  geom_line()
+ggplot(economics, aes(date, uempmed)) +
+  geom_line()
+```
++ To examine this relationship in greater detail, we would like to draw both time series on the same plot. 
++ The solution is to join points adjacent in time with line segments, forming a path plot.
+
++ Below we plot unemployment rate vs. length of unemployment and join the individual observations with a path.
++ In the second plot, we colour the points to make it easier to see the direction of time.
+```{r}
+ggplot(economics, aes(unemploy / pop, uempmed)) + 
+  geom_path() +
+  geom_point()
+
+year <- function(x) as.POSIXlt(x)$year + 1900
+ggplot(economics, aes(unemploy / pop, uempmed)) + 
+  geom_path(colour = "grey50") +
+  geom_point(aes(colour = year(date)))
+```
+
++ With longitudinal data, you often want to display multiple time series on each plot, each series representing one individual.
++ To do this you need to map the group aesthetic to a variable encoding the group membership of each observation.
+
+# Modifying the axes
+
+Modify names of axes
+```{r}
+ggplot(mpg, aes(cty, hwy)) +
+  geom_point(alpha = 1 / 3)
+
+ggplot(mpg, aes(cty, hwy)) +
+  geom_point(alpha = 1 / 3) + 
+  xlab("city driving (mpg)") + 
+  ylab("highway driving (mpg)")
+
+# Remove the axis labels with NULL
+ggplot(mpg, aes(cty, hwy)) +
+  geom_point(alpha = 1 / 3) + 
+  xlab(NULL) + 
+  ylab(NULL)
+```
+
+
+Modify limits of axes
+
++ for continuous scales, use NA to set only one limit
++ for categorical x axes  use xlim("f","r")
+```{r}
+ggplot(mpg, aes(drv, hwy)) +
+  geom_jitter(width = 0.25)
+
+ggplot(mpg, aes(drv, hwy)) +
+  geom_jitter(width = 0.25) + 
+  xlim("f", "r") + 
+  ylim(20, 30)
+#> Warning: Removed 137 rows containing missing values (geom_point).
+  
+# For continuous scales, use NA to set only one limit
+ggplot(mpg, aes(drv, hwy)) +
+  geom_jitter(width = 0.25, na.rm = TRUE) + 
+  ylim(NA, 30)
+
+```
+
+# Output
+
++ save to disk
+```{r}
+#ggsave("plot.png", p, width = 5, height = 5)
+```
+
+
++ saved a cached copy to disk so you can easily recreate it with readRDS(0)
+```{r}
+p <- ggplot(mpg, aes(displ, hwy, colour = factor(cyl))) +
+  geom_point()
+
+saveRDS(p, "plot.rds")
+q <- readRDS("plot.rds")
+```
+
+
+## Layers
+
+There are 3 purposes for a layer
+
++ display the data
++ display statistical summary
+  
+  + useful to display model predictions in the context of dta
+  + sumaries are drawn on top of the data
+
++ add additional metadata
+
+  + context : background
+  + annotations : give meaning to raw data
+  + references : fixed references that aid comparisons across panels
+  
+  
+A map is used as background layer with spatial data
+
++ background metadata, if you concentrate on it, you can see it with ease, but it doesn’t jump out at you when you are casually browsing the plot.
+
++ you want to render them so that they pop out at the viewer. In that case, you want this to be the very last layer drawn
+
+Filled geoms (bar, tile, polygon understand fill)
+
+# Geoms
+
+*geom_area()*
+
++ draws area plot 
++ line plot filled to the y- axis
++ multiple groups stacked on top 
+
+*geom_bar(stat = 'identity')*
+
++ makes bar chart
++ need stat = 'identity' because default stat automatically count values 
++ The identity stat leaves the data unchanged.
+
+
+*geom_line()*
+ 
++ line plot
++ group determines which observations are connected
++ connects points from left to righ
++ geom_path connects points in order they appear in data
++ both understand aesthetic `linetype` which maps a categorical variable to solid, dotted and dashed lines
+
+*geom_polygon()*
+
++ draws polygons, which are filled paths
++ Each vertex of the polygon requires a separate row in the data
++ useful to merge a data frame of polygon coordinates with the data just prior to plotting.
+
+```{r}
+df <- data.frame(
+  x = c(3, 1, 5), 
+  y = c(2, 4, 6), 
+  label = c("a","b","c")
+)
+p <- ggplot(df, aes(x, y, label = label)) + 
+  labs(x = NULL, y = NULL) + # Hide axis label
+  theme(plot.title = element_text(size = 12)) # Shrink plot title
+p + geom_point() + ggtitle("point")
+p + geom_text() + ggtitle("text")
+p + geom_bar(stat = "identity") + ggtitle("bar")
+p + geom_tile() + ggtitle("raster")
+```
+
+```{r}
+p + geom_line() + ggtitle("line")
+p + geom_area() + ggtitle("area")
+p + geom_path() + ggtitle("path")
+p + geom_polygon() + ggtitle("polygon")
+```
+
+# Collective geoms
+Geoms can be roughly divided into individual and collective geoms.
+
++ individual geom draws a distinct graphical object for each observation (row).
++ collective geom displays multiple observations with one geometric object. This may be a result of a statistical summary, 
+
+distinguish individual subjects, but not identify them, common in longitudinal studies
+
+```{r}
+ggplot(Oxboys, aes(age, height, group = Subject)) + # make sure to put grouping in aes()
+  geom_point() + 
+  geom_line()
+
+
+# lets add different levels of aggreagtion
+# like overall summary with single smooth line about overall trend for all boys
+
+# in geom_smooth it does for all, but we want it for each boy so put it in geom_line()
+ggplot(Oxboys, aes(age, height)) + 
+  geom_line(aes(group = Subject)) + 
+  geom_smooth(method = "lm", size = 2, se = FALSE)
+
+# for discrete events you want to connect for subject
+# override the grouping to say we want one line per boy
+
+ggplot(Oxboys, aes(Occasion, height)) + 
+  geom_boxplot() +
+  geom_line(aes(group = Subject), colour = "#3366FF", alpha = 0.5)
+
+```
+mapping discrete variables
+```{r}
+ggplot(mpg, aes(class)) + 
+  geom_bar()
+ggplot(mpg, aes(class, fill = drv)) + 
+  geom_bar()
+
+# mapping continuous variables
+ggplot(mpg, aes(class, fill = hwy)) + 
+  geom_bar()
+ggplot(mpg, aes(class, fill = hwy, group = hwy)) + 
+  geom_bar()
+
+```
+
+
+
+## Statistical summaries
+
+**Revealing uncertainty**
+
+4 basic families of geoms
+
+*discrete* x, range : geom_errorbar(), geom_linerange()
+
+*discrete* x, range & center : geom_crossbar(), geom_pointrange()
+
+*continuous* x, range : geom_ribbon()
+
+*continuous* x, range & center : geom_smooth(stat = "identity")
+
+Geoms assume you are interested in distribution of y conditional on x & determines aesthetics ymin and ymax to determine range of y values
+
+
+```{r}
+y <- c(18, 11, 16)
+df <- data.frame(x = 1:3, y = y, se = c(1.2, 0.5, 1.0))
+
+base <- ggplot(df, aes(x, y, ymin = y - se, ymax = y + se))
+
+# discrete x : range
+base + geom_errorbar() + ggtitle('errorbar')
+base + geom_linerange() + ggtitle('linerange')
+
+# discrete x : range and center
+base + geom_crossbar() + ggtitle('crossbar')
+base + geom_pointrange() + ggtitle('pointrange')
+
+#continuous x, range
+base + geom_ribbon() + ggtitle('geomribbon')
+
+#continuous x, range & center
+base + geom_smooth(stat = "identity") +  ggtitle('geom_smooth')
+
+
+```
+
+# weighted data
+
+aggreaged data where each row represents multiple observations, need to take into account the weighting variable
+
+percentages (% white, % below poverty line, % with degree) & some info for each count (area, total pop, pop density)
+
+Few things we might want to weight by
+
++ nothing, look at # of counties
++ total pop, work with absolute numbers
++ area, to investigate geographic effects
+
+choice of weighting variable affects what we look at and conclusion we draw
+
+two aesthetic attributes that can be used to adjust for weights geomline() + geompoint()
+
+```{r}
+
+data(midwest)
+# Unweighted
+ggplot(midwest, aes(percwhite, percbelowpoverty)) + 
+  geom_point()
+
+# Weight by population
+ggplot(midwest, aes(percwhite, percbelowpoverty)) + 
+  geom_point(aes(size = poptotal / 1e6)) + 
+  scale_size_area("Population\n(millions)", breaks = c(0.5, 1, 2, 4))
+```
+
+
+when there's statistical transformation, we specify weights with weight aes(), which will then be passed on to the stat summary function
+
+weights are supported where it makes sense: smoothers, quantile regressioon, boxplot, histograms, density plots
+
+weighing pop density affects relationship between % white and % below poverty line
+```{r}
+# Unweighted
+ggplot(midwest, aes(percwhite, percbelowpoverty)) + 
+  geom_point() + 
+  geom_smooth(method = lm, size = 1)
+#> `geom_smooth()` using formula 'y ~ x'
+
+# Weighted by population
+ggplot(midwest, aes(percwhite, percbelowpoverty)) + 
+  geom_point(aes(size = poptotal / 1e6)) + 
+  geom_smooth(aes(weight = poptotal), method = lm, size = 1) +
+  scale_size_area(guide = "none")
+```
+
+when weighing histogram or density plot by tot pop, we change distribution of number of counties to  distribution of number of people
+
+```{r}
+ggplot(midwest, aes(percbelowpoverty)) +
+  geom_histogram(binwidth = 1) + 
+  ylab("Counties")
+
+ggplot(midwest, aes(percbelowpoverty)) +
+  geom_histogram(aes(weight = poptotal), binwidth = 1) +
+  ylab("Population (1000s)")
+```
+
+# displaying distributions
+
+for continuous distributions, geom_histogram()
+
+```{r}
+ggplot(diamonds, aes(depth)) + 
+  geom_histogram()
+#> `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+ggplot(diamonds, aes(depth)) + 
+  geom_histogram(binwidth = 0.1) + 
+  xlim(55, 70)
+```
+if you want to compare distribution between groups, there are options
+
++ show small multiples of the histogram `facet_wrap(~ var)`
+
++ use color and frequency polygon `geom_freqpoly()`
+
++ use conditional density plot `geom_histogram(position = 'fill')`
+    + position fill to stack each bin scaling it to same height
+    
+```{r}
+ggplot(diamonds, aes(depth)) + 
+  geom_freqpoly(aes(colour = cut), binwidth = 0.1, na.rm = TRUE) +
+  xlim(58, 68) + 
+  theme(legend.position = "none")
+ggplot(diamonds, aes(depth)) + 
+  geom_histogram(aes(fill = cut), binwidth = 0.1, position = "fill",
+    na.rm = TRUE) +
+  xlim(58, 68) + 
+  theme(legend.position = "none")
+```
+
+**stat = "bin"** produces two output variables : `count` and `density`
+
++ by default, count is mapped to y-position
++ density is count divided by total count multipled by bin width, helpful for shape of distribution not overall size 
+
+
+or alternative is density estimate `geom_density()`
+
++ places normal distribution at each data point and sums up all curves
++ use when you know underlying density is smooth, continuous and unbounded
++ use   `adjust` parameter to make density more or less smooth
+
+```{r}
+ggplot(diamonds, aes(depth)) +
+  geom_density(na.rm = TRUE) + 
+  xlim(58, 68) + 
+  theme(legend.position = "none")
+ggplot(diamonds, aes(depth, fill = cut, colour = cut)) +
+  geom_density(alpha = 0.2, na.rm = TRUE) + 
+  xlim(58, 68) + 
+  theme(legend.position = "none")
+```
+
+
+To compare many distributions (scrifice quality for quantity)
+
+geom_boxplot() : less info than histogram but takes less space
+
++ can use continuous or categorical x
+
++ for continuous x, set group aes to define how x variable is broken into bins `cut_width()`
+
+```{r}
+ggplot(diamonds, aes(clarity, depth)) + 
+  geom_boxplot()
+ggplot(diamonds, aes(carat, depth)) + 
+  geom_boxplot(aes(group = cut_width(carat, 0.1))) + 
+  xlim(NA, 2.05)
+```
+
+
+`geom_violin()` compact version of density plot
+```{r}
+ggplot(diamonds, aes(clarity, depth)) + 
+  geom_violin()
+ggplot(diamonds, aes(carat, depth)) + 
+  geom_violin(aes(group = cut_width(carat, 0.1))) + 
+  xlim(NA, 2.05)
+```
+
+
+`geom_dotplot()` draws one point for each observation, carfeully adjusted in space to avoid overlaps and show distribution (good for smaller datasets)
+
+# Overplotting 
+
+Scatterplot for two continuous variables
+
+For small datasets, make point smaller or hollow for bivariate distribution
+```{r}
+df <- data.frame(x = rnorm(2000), y = rnorm(2000))
+norm <- ggplot(df, aes(x, y)) + xlab(NULL) + ylab(NULL)
+norm + geom_point()
+norm + geom_point(shape = 1) # Hollow circles
+norm + geom_point(shape = ".") # Pixel sized
+```
+
+
+For larger datasets, use transparency
+```{r}
+norm + geom_point(alpha = 1 / 3)
+norm + geom_point(alpha = 1 / 5)
+norm + geom_point(alpha = 1 / 10)
+```
+
+2d density estimation problem 
+
++ Bin the points and count the number in each bin, then visualise that count (the 2d generalisation of the histogram), geom_bin2d()
++ Breaking the plot into many small squares can produce distracting visual artefacts, use  hexagons instead
+```{r}
+norm + geom_bin2d()
+norm + geom_bin2d(bins = 10)
+
+# use hexagons
+norm + geom_hex()
+norm + geom_hex(bins = 10)
+```
+
+
+# Statistical summaries
+
+geom_histogram() and geom_bin2d() use a familiar geom, geom_bar() and geom_raster(), combined with a new statistical transformation, stat_bin() and stat_bin2d()
+
+`stat_bin()` and `stat_bin2d()` combine the data into bins and count the number of observations in each bin
+
+Other summary other than count:
+`stat_summary_bin()` and `stat_summary_2d()`
+
++ can control the size of the bins and the summary functions.
+
++ stat_summary_bin() can produce y, ymin and ymax aesthetics
+
+
+```{r}
+ggplot(diamonds, aes(color)) + 
+  geom_bar()
+
+ggplot(diamonds, aes(color, price)) + 
+  geom_bar(stat = "summary_bin", fun = mean)
+
+ggplot(diamonds, aes(table, depth)) + 
+  geom_bin2d(binwidth = 1, na.rm = TRUE) + 
+  xlim(50, 70) + 
+  ylim(50, 70)
+
+ggplot(diamonds, aes(table, depth, z = price)) + 
+  geom_raster(binwidth = 1, stat = "summary_2d", fun = mean, 
+    na.rm = TRUE) + 
+  xlim(50, 70) + 
+  ylim(50, 70)
+```
+
+
+Previous two classes of geoms ^^
+
++ simple geoms with one on one correspondence between rows and physical elements of geom
+
++ statistical geoms where a layer of stat summaries in between raw data and result
+
+# Surfaces
+
+Now lets look at 3D surface is required
+
+`..` refers to variable computed internally
+
+```{r}
+ggplot(faithfuld, aes(eruptions, waiting)) + 
+  geom_contour(aes(z = density, colour = ..level..))
+```
+
+To display same density as heat map, use geom_raster()
+```{r}
+ggplot(faithfuld, aes(eruptions, waiting)) + 
+  geom_raster(aes(fill = density))
+```
+
+
+Bubble plots work bettwer iwth fewer observations
+```{r}
+small <- faithfuld[seq(1, nrow(faithfuld), by = 10), ]
+ggplot(small, aes(eruptions, waiting)) + 
+  geom_point(aes(size = density), alpha = 1/3) + 
+  scale_size_area()
+```
+
+
+
+## stuff about maps I ignored
+
+
+## Labelling
+
+text labels
+`geom_text()`
+
++ text drawing is handled differently by each graphics device (GD)
+quartz() for Macs
+
+text labels
+`geom_text()`
+```{r}
+df <- data.frame(x = 1, y = 3:1, family = c("sans", "serif", "mono"))
+ggplot(df, aes(x, y)) + 
+  geom_text(aes(label = family, family = family))
+```
+
+fontface
+
+```{r}
+df <- data.frame(x = 1, y = 3:1, face = c("plain", "bold", "italic"))
+ggplot(df, aes(x, y)) + 
+  geom_text(aes(label = face, fontface = face))
+```
+
+alignment
+
++ hjust (“left”, “center”, “right”, “inward”, “outward”) 
+
++ vjust (“bottom”, “middle”, “top”, “inward”, “outward”) 
+
++ inward aligns text towards middle of plot to remain within plot limits
+
+```{r}
+df <- data.frame(
+  x = c(1, 1, 2, 2, 1.5),
+  y = c(1, 2, 1, 2, 1.5),
+  text = c(
+    "bottom-left", "bottom-right", 
+    "top-left", "top-right", "center"
+  )
+)
+ggplot(df, aes(x, y)) +
+  geom_text(aes(label = text))
+ggplot(df, aes(x, y)) +
+  geom_text(aes(label = text), vjust = "inward", hjust = "inward")
+```
+
+
+label existing point
+
+nudge_x and nudge_y
+```{r}
+df <- data.frame(trt = c("a", "b", "c"), resp = c(1.2, 3.4, 2.5))
+ggplot(df, aes(resp, trt)) + 
+  geom_point() + 
+  geom_text(aes(label = paste0("(", resp, ")")), nudge_y = -0.25) + 
+  xlim(1, 3.6)
+```
+
+
+to prevent overlap labels
+```{r}
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_text(aes(label = model)) + 
+  xlim(1, 8)
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_text(aes(label = model), check_overlap = TRUE) + 
+  xlim(1, 8)
+```
+
+add labels to busy backgrounds
+```{r}
+label <- data.frame(
+  waiting = c(55, 80), 
+  eruptions = c(2, 4.3), 
+  label = c("peak one", "peak two")
+)
+
+ggplot(faithfuld, aes(waiting, eruptions)) +
+  geom_tile(aes(fill = density)) + 
+  geom_label(data = label, aes(label = label))
+```
+
+#Custom annotations
+
++ geom_text() and geom_label() to add text, as illustrated earlier.
+
++ geom_rect() to highlight interesting rectangular regions of the plot. geom_rect() has aesthetics xmin, xmax, ymin and ymax.
+
++ geom_line(), geom_path() and geom_segment() to add lines. All these geoms have an arrow parameter, which allows you to place an arrowhead on the line. Create arrowheads with arrow(), which has arguments angle, length, ends and type.
+
++ geom_vline(), geom_hline() and geom_abline() allow you to add reference lines (sometimes called rules), that span the full range of the plot.
+
+
+```{r}
+ggplot(economics, aes(date, unemploy)) + 
+  geom_line()
+
+presidential <- subset(presidential, start > economics$date[1])
+
+ggplot(economics) + 
+  geom_rect(
+    aes(xmin = start, xmax = end, fill = party), 
+    ymin = -Inf, ymax = Inf, alpha = 0.2, 
+    data = presidential
+  ) + 
+  geom_vline(
+    aes(xintercept = as.numeric(start)), 
+    data = presidential,
+    colour = "grey50", alpha = 0.5
+  ) + 
+  geom_text(
+    aes(x = start, y = 2500, label = name), 
+    data = presidential, 
+    size = 3, vjust = 0, hjust = 0, nudge_x = 50
+  ) + 
+  geom_line(aes(date, unemploy)) + 
+  scale_fill_manual(values = c("blue", "red")) +
+  xlab("date") + 
+  ylab("unemployment")
+
+
+```
+
+the use of -Inf and Inf as positions. These refer to the top and bottom (or left and right) limits of the plot
+```{r}
+
+yrng <- range(economics$unemploy)
+xrng <- range(economics$date)
+caption <- paste(strwrap("Unemployment rates in the US have 
+  varied a lot over the years", 40), collapse = "\n")
+
+
+ggplot(economics, aes(date, unemploy)) + 
+  geom_line() + 
+  annotate(
+    geom = "text", x = xrng[1], y = yrng[2], 
+    label = caption, hjust = 0, vjust = 1, size = 4
+  )
+```
+
+To highlight certain points using annotate()
+```{r}
+p <- ggplot(mpg, aes(displ, hwy)) +
+  geom_point(
+    data = filter(mpg, manufacturer == "subaru"), 
+    colour = "orange",
+    size = 3
+  ) +
+  geom_point() 
+
+p + 
+  annotate(geom = "point", x = 5.5, y = 40, colour = "orange", size = 3) + 
+  annotate(geom = "point", x = 5.5, y = 40) + 
+  annotate(geom = "text", x = 5.6, y = 40, label = "subaru", hjust = "left")
+
+
+## OR
+
+p + 
+  annotate(
+    geom = "curve", x = 4, y = 35, xend = 2.65, yend = 27, 
+    curvature = .3, arrow = arrow(length = unit(2, "mm"))
+  ) +
+  annotate(geom = "text", x = 4.1, y = 35, label = "subaru", hjust = "left")
+```
+
+
+Direct labeling
+```{r}
+ggplot(mpg, aes(displ, hwy, colour = class)) + 
+  geom_point()
+
+ggplot(mpg, aes(displ, hwy, colour = class)) + 
+  geom_point(show.legend = FALSE) +
+  directlabels::geom_dl(aes(label = class), method = "smart.grid")
+```
+
+labeling iwth ellipse()
+```{r}
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point() + 
+  ggforce::geom_mark_ellipse(aes(label = cyl, group = cyl))
+```
+
+
+Annotate across facets
+```{r}
+ggplot(diamonds, aes(log10(carat), log10(price))) + 
+  geom_bin2d() + 
+  facet_wrap(vars(cut), nrow = 1)
+
+# add reference line
+mod_coef <- coef(lm(log10(price) ~ log10(carat), data = diamonds))
+ggplot(diamonds, aes(log10(carat), log10(price))) + 
+  geom_bin2d() + 
+  geom_abline(intercept = mod_coef[1], slope = mod_coef[2], 
+    colour = "white", size = 1) + 
+  facet_wrap(vars(cut), nrow = 1)
+```
+
+
+Display data from single group with complete data set in background
+```{r}
+ggplot(mpg, aes(displ, hwy, colour = factor(cyl))) +
+  geom_point() + 
+  gghighlight::gghighlight() + 
+  facet_wrap(vars(cyl))
+```
+
+
+## Scales (need to go back to do this)
