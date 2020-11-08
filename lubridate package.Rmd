@@ -1,0 +1,111 @@
+---
+title: "lubridate package"
+author: "sbsambado"
+date: "11/8/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(here)
+library(ggeasy)
+
+
+options(scipen = 999)
+```
+
+```{r}
+
+# think this isn't the same dataset in tutorial but maybe close to it
+tests <- read.csv("pcr_testing_table1_location_agg.csv")
+
+glimpse(tests)
+```
+
+tests by date
+```{r}
+tests %>%
+  ggplot(aes(x = test_date, y = test_count))+
+  geom_line()
+```
+test by month
+
+use label = TRUE to get month names
+```{r}
+tests %>%
+  ggplot(aes(x = month(test_date, label = TRUE), y = test_count, fill = month(test_date, label = TRUE)))+
+  geom_col()+
+  labs(x = 'month', y = 'total tests')+
+  easy_remove_legend()
+
+```
+
+tests by wday and start on monday
+```{r}
+tests %>%
+  ggplot(aes(x = wday(test_date, label = TRUE, week_start = getOption("lubridat.week.start", 1)), y = test_count, fill = wday(test_date, label = TRUE)))+
+  geom_col()+
+  labs(x = 'week day', y = 'total tests')+
+  easy_remove_legend()
+```
+
+
+
+tst by day and month
+```{r}
+
+tests %>%
+  #filter(test_date >= "2020-07-01") %>%
+  ggplot(aes(x = day(test_date), y = test_count, fill = wday(test_date, label = TRUE, week_start = getOption("lubridate.week.start", 1))))+
+  geom_col()+
+  facet_wrap(~ month(test_date, label = TRUE))+
+  easy_remove_legend()
+```
+
+now data is not recognized as dates
+
+```{r}
+sales <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-09-29/sales.csv')
+
+class(sales$released)
+
+sales$released[[1]]
+```
+
+transform date data
+```{r}
+
+sales $released <- mdy(sales$released)
+class(sales$released)
+sales$released[[1]]
+
+
+```
+
+sales by year/country
+```{r}
+sales %>%
+  filter(country %in% c("US", "UK")) %>%
+  ggplot(aes(x = year(released), y = sales, color = country, group = country))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(~artist)
+```
+
+what do with dates in million formats
+
+- couldnt find this file but have code
+```{r}
+# use mutate and parse_date_time()
+diff_dates_new <- diff_dates %>%
+  mutate(parsed_freedates = parse_date_time(free_date, c("ymd", "mdy", "dmy")))
+
+
+```
+
