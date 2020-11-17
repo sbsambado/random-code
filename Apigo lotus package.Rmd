@@ -1,0 +1,49 @@
+---
+title: "A Apigo package"
+author: "sbsambado"
+date: "11/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r install}
+devtools::install_github("austenapigo/lotus")
+
+library(lotus)
+
+help("structural.specificity")
+
+dim(quad.rarefied)
+plot(utree, cex = 0.5) # phylogenetic tree in newick format
+
+
+# calculate uncorrected host specificity (not relavitized to null model)
+hs.object <- structural.specificity(quad.rarefied, abundance.weighted = TRUE, trim = TRUE)
+hs.object
+
+plot(density(hs.object$Structural.Specificity))
+
+# get read abundances per symbiont
+read.abund <- as.data.frame(colSums(quad.rarefied))
+read.abund.trim <- read.abund[rownames(read.abund) %in% rownames(hs.object),] # trim relative to hs.object
+
+
+cor.test(hs.object$Structural.Specificity, read.abund.trim) # correlation test
+
+plot(y = hs.object$Structural.Specificity, x = log(read.abund.trim),
+     ylab = "Uncorrected (Host Richness)")
+
+# Randomize community matrix to generate a null model for deviance calculations
+null.structural.object <- null.structural(quad.rarefied, iterations = 100, abundance.weighted = TRUE, randomization.method = "shuffle.web", trim = TRUE, notify = TRUE)
+
+# Calculate and plot the deviance of observed host specificity from the null boundary and get averages per host sample
+structural.dev <- deviance.structural(quad.rarefied, randomized = null.structural.object, model = "second", abundance.weighted = TRUE, trim = TRUE, notify = TRUE)
+structural.dev[[1]] # View data frame of output
+structural.dev[[2]] # View occupancy-abundance model for the first sample
+structural.dev[[81]] # View occupancy-abundance model for the last sample
+```
+
