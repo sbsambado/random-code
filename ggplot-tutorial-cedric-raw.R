@@ -1422,3 +1422,4 @@ chic$date_num <- as.numeric(chic$date)
 chart(data = chic, caes(date_num, temp)) %>%
   c_scatter(caes(color = season, group = season)) %>%
   c_colors(RColorBrewer::brewer.pal(4, name = "Dark2"))
+
