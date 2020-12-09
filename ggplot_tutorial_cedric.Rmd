@@ -7,6 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
 ```
 
 
@@ -250,6 +252,10 @@ ggplot(chic,
   geom_point() +
   labs(x = "Year", y = "Temperature (°F)")
 
+```
+
+legend
+```{r}
 ggplot(chic,
        aes(x = date, y = temp, color = season)) +
   geom_point() +
@@ -297,20 +303,20 @@ ggplot(chic, aes(x = date, y = temp, color = season)) +
         legend.background = element_rect(fill = "transparent")) +
   guides(color = guide_legend(direction = "horizontal"))
 
-ggplot(chic, aes(x = date, y = temp, color = season)) +
-  geom_point() +
-  labs(x = "Year", y = "Temperature (°F)") +
-  theme(legend.title = element_text(family = "Playfair",
-                                    color = "chocolate",
-                                    size = 14, face = "bold"))
+# ggplot(chic, aes(x = date, y = temp, color = season)) +
+#   geom_point() +
+#   labs(x = "Year", y = "Temperature (°F)") +
+#   theme(legend.title = element_text(family = "Playfair",
+#                                     color = "chocolate",
+#                                     size = 14, face = "bold"))
 
-ggplot(chic, aes(x = date, y = temp, color = season)) +
-  geom_point() +
-  labs(x = "Year", y = "Temperature (°F)",
-       color = "Seasons\nindicated\nby colors:") +
-  theme(legend.title = element_text(family = "Playfair",
-                                    color = "chocolate",
-                                    size = 14, face = "bold"))
+# ggplot(chic, aes(x = date, y = temp, color = season)) +
+#   geom_point() +
+#   labs(x = "Year", y = "Temperature (°F)",
+#        color = "Seasons\nindicated\nby colors:") +
+#   theme(legend.title = element_text(family = "Playfair",
+#                                     color = "chocolate",
+#                                     size = 14, face = "bold"))
 
 ## ggplot(chic, aes(x = date, y = temp, color = season))) +
 ##   geom_point() +
@@ -320,6 +326,10 @@ ggplot(chic, aes(x = date, y = temp, color = season)) +
 ##                                     size = 14, face = "bold")) +
 ##   scale_color_discrete(name = "Seasons\nindicated\nby colors:")
 
+```
+
+grouping data by variable level
+```{r}
 chic$season <- 
   factor(chic$season, 
          levels = c("Winter", "Spring", "Summer", "Autumn"))
@@ -328,23 +338,23 @@ ggplot(chic, aes(x = date, y = temp, color = season)) +
   geom_point() +
   labs(x = "Year", y = "Temperature (°F)")
 
-ggplot(chic, aes(x = date, y = temp, color = season)) +
-  geom_point() +
-  labs(x = "Year", y = "Temperature (°F)") +
-  scale_color_discrete("Seasons:", labels = c("Mar—May", "Jun—Aug",
-                                              "Sep—Nov", "Dec—Feb")) +
-  theme(legend.title = element_text(family = "Playfair",
-                                    color = "chocolate",
-                                    size = 14, face = 2))
+# ggplot(chic, aes(x = date, y = temp, color = season)) +
+#   geom_point() +
+#   labs(x = "Year", y = "Temperature (°F)") +
+#   scale_color_discrete("Seasons:", labels = c("Mar—May", "Jun—Aug",
+#                                               "Sep—Nov", "Dec—Feb")) +
+#   theme(legend.title = element_text(family = "Playfair",
+#                                     color = "chocolate",
+#                                     size = 14, face = 2))
 
-ggplot(chic, aes(x = date, y = temp, color = season)) +
-  geom_point() +
-  labs(x = "Year", y = "Temperature (°F)") +
-  theme(legend.key = element_rect(fill = "darkgoldenrod1"),
-        legend.title = element_text(family = "Playfair",
-                                    color = "chocolate",
-                                    size = 14, face = 2)) +
-  scale_color_discrete("Seasons:")
+# ggplot(chic, aes(x = date, y = temp, color = season)) +
+#   geom_point() +
+#   labs(x = "Year", y = "Temperature (°F)") +
+#   theme(legend.key = element_rect(fill = "darkgoldenrod1"),
+#         legend.title = element_text(family = "Playfair",
+#                                     color = "chocolate",
+#                                     size = 14, face = 2)) +
+#   scale_color_discrete("Seasons:")
 
 ggplot(chic, aes(x = date, y = temp, color = season)) +
   geom_point() +
@@ -365,6 +375,11 @@ ggplot(chic, aes(x = date, y = temp, color = season)) +
   labs(x = "Year", y = "Temperature (°F)") +
   geom_rug(show.legend = FALSE)
 
+
+```
+
+different colors for lines and points
+```{r}
 ggplot(chic, aes(x = date, y = o3)) +
   geom_line(color = "gray") +
   geom_point(color = "darkorange2") +
@@ -376,6 +391,10 @@ ggplot(chic, aes(x = date, y = o3)) +
   labs(x = "Year", y = "Ozone") +
   scale_color_discrete("Type:")
 
+```
+
+gradient level coloration
+```{r}
 ggplot(chic, aes(x = date, y = o3)) +
   geom_line(aes(color = "line")) +  
   geom_point(aes(color = "points")) +
@@ -410,6 +429,12 @@ ggplot(chic,
   labs(x = "Year", y = "Temperature (°F)", color = "Temperature (°F)") +
   guides(color = guide_colorsteps())
 
+
+```
+
+
+panel.grid background stuff
+```{r}
 ggplot(chic, aes(x = date, y = temp)) +
   geom_point(color = "firebrick") +
   labs(x = "Year", y = "Temperature (°F)") +
@@ -444,6 +469,11 @@ ggplot(chic, aes(x = date, y = temp)) +
   scale_y_continuous(breaks = seq(0, 100, 10),
                      minor_breaks = seq(0, 100, 2.5))
 
+```
+
+
+change background color
+```{r}
 ggplot(chic, aes(x = date, y = temp)) +
   geom_point(color = "#1D8565", size = 2) +
   labs(x = "Year", y = "Temperature (°F)") +
@@ -475,6 +505,11 @@ ggplot(chic, aes(x = date, y = temp)) +
   theme(plot.background = element_rect(fill = "gray60"),
         plot.margin = unit(c(1, 3, 1, 8), "cm"))
 
+
+```
+
+facet_wrap
+```{r}
 g <- ggplot(chic, aes(x = date, y = temp)) +
   geom_point(color = "chartreuse4", alpha = .3) +
   labs(x = "Year", y = "Temperature (°F)") +
@@ -501,6 +536,10 @@ g + facet_wrap(~ year, nrow = 1, scales = "free_x") +
                                   hjust = 0, size = 20),
         strip.background = element_rect(fill = "chartreuse3", linetype = "dotted"))
 
+```
+
+need to figure this section out
+```{r}
 library(ggtext)
 library(rlang)
 
@@ -524,37 +563,41 @@ element_grob.element_textbox_highlight <- function(element, label = "", ...) {
   NextMethod()
 }
 
-g + facet_wrap(year ~ season, nrow = 4, scales = "free_x") +
-  theme(
-    strip.background = element_blank(),
-    strip.text = element_textbox_highlight(
-      family = "Playfair", size = 12, face = "bold",
-      fill = "white", box.color = "chartreuse4", color = "chartreuse4",
-      halign = .5, linetype = 1, r = unit(5, "pt"), width = unit(1, "npc"),
-      padding = margin(5, 0, 3, 0), margin = margin(0, 1, 3, 1),
-      hi.labels = c("1997", "1998", "1999", "2000"),
-      hi.fill = "chartreuse4", hi.box.col = "black", hi.col = "white"
-    )
-  )
+# g + facet_wrap(year ~ season, nrow = 4, scales = "free_x") +
+#   theme(
+#     strip.background = element_blank(),
+#     strip.text = element_textbox_highlight(
+#       family = "Playfair", size = 12, face = "bold",
+#       fill = "white", box.color = "chartreuse4", color = "chartreuse4",
+#       halign = .5, linetype = 1, r = unit(5, "pt"), width = unit(1, "npc"),
+#       padding = margin(5, 0, 3, 0), margin = margin(0, 1, 3, 1),
+#       hi.labels = c("1997", "1998", "1999", "2000"),
+#       hi.fill = "chartreuse4", hi.box.col = "black", hi.col = "white"
+#     )
+#   )
 
-ggplot(chic, aes(x = date, y = temp)) +
-  geom_point(aes(color = season == "Summer"), alpha = .3) +
-  labs(x = "Year", y = "Temperature (°F)") +
-  facet_wrap(~ season, nrow = 1) +
-  scale_color_manual(values = c("gray40", "firebrick"), guide = "none") +
-  theme(
-    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
-    strip.background = element_blank(),
-    strip.text = element_textbox_highlight(
-      size = 12, face = "bold",
-      fill = "white", box.color = "white", color = "gray40",
-      halign = .5, linetype = 1, r = unit(0, "pt"), width = unit(1, "npc"),
-      padding = margin(2, 0, 1, 0), margin = margin(0, 1, 3, 1),
-      hi.labels = "Summer", hi.family = "Bangers",
-      hi.fill = "firebrick", hi.box.col = "firebrick", hi.col = "white"
-    )
-  )
+# ggplot(chic, aes(x = date, y = temp)) +
+#   geom_point(aes(color = season == "Summer"), alpha = .3) +
+#   labs(x = "Year", y = "Temperature (°F)") +
+#   facet_wrap(~ season, nrow = 1) +
+#   scale_color_manual(values = c("gray40", "firebrick"), guide = "none") +
+#   theme(
+#     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+#     strip.background = element_blank(),
+#     strip.text = element_textbox_highlight(
+#       size = 12, face = "bold",
+#       fill = "white", box.color = "white", color = "gray40",
+#       halign = .5, linetype = 1, r = unit(0, "pt"), width = unit(1, "npc"),
+#       padding = margin(2, 0, 1, 0), margin = margin(0, 1, 3, 1),
+#       hi.labels = "Summer", hi.family = "Bangers",
+#       hi.fill = "firebrick", hi.box.col = "firebrick", hi.col = "white"
+#     )
+#   )
 
+```
+
+plotting multiple graphs together
+```{r}
 p1 <- ggplot(chic, aes(x = date, y = temp,
                        color = season)) +
   geom_point() +
@@ -590,6 +633,11 @@ AACCDDE
 p2 + p1 + p1 + g + p2 +
   plot_layout(design = layout)
 
+
+```
+
+gradient scales
+```{r}
 ggplot(chic, aes(year)) +
   geom_bar(aes(fill = season), color = "grey", size = 2) +
   labs(x = "Year", y = "Observations", fill = "Season:")
@@ -664,6 +712,11 @@ g2 <- gb + scale_color_scico(palette = "hawaii", direction = -1)
 
 (g1 + g2) * theme(legend.position = "bottom")
 
+
+```
+
+theme stuff
+```{r}
 library(ggdark)
 
 ggplot(chic, aes(date, temp, color = temp)) +
@@ -717,14 +770,19 @@ g <- ggplot(chic, aes(x = date, y = temp)) +
   labs(x = "Year", y = "Temperature (°F)",
        title = "Temperatures in Chicago")
 
-g + theme_bw(base_family = "Playfair")
+#g + theme_bw(base_family = "Playfair")
 
-g + theme_bw(base_size = 30, base_family = "Roboto Condensed")
+#g + theme_bw(base_size = 30, base_family = "Roboto Condensed")
 
 g + theme_bw(base_line_size = 1, base_rect_size = 1)
 
 theme_gray
 
+
+```
+
+customize theme
+```{r}
 theme_custom <- function (base_size = 12, base_family = "Roboto Condensed") {
   half_line <- base_size/2
   theme(
@@ -828,76 +886,87 @@ theme_custom <- function (base_size = 12, base_family = "Roboto Condensed") {
 }
 
 theme_set(theme_custom())
+```
 
-ggplot(chic, aes(x = date, y = temp, color = season)) +
-  geom_point() + labs(x = "Year", y = "Temperature (°F)") + guides(color = FALSE)
+```{r}
+# ggplot(chic, aes(x = date, y = temp, color = season)) +
+#   geom_point() + labs(x = "Year", y = "Temperature (°F)") + guides(color = FALSE)
 
 theme_custom <- theme_update(panel.background = element_rect(fill = "gray60"))
 
-ggplot(chic, aes(x = date, y = temp, color = season)) +
-  geom_point() + labs(x = "Year", y = "Temperature (°F)") + guides(color = FALSE)
+# ggplot(chic, aes(x = date, y = temp, color = season)) +
+#   geom_point() + labs(x = "Year", y = "Temperature (°F)") + guides(color = FALSE)
 
 theme_custom <- theme_update(panel.background = element_rect(fill = "white"),
                              panel.grid.major = element_line(size = .5),
                              panel.grid.minor = element_blank())
 
-ggplot(chic, aes(x = date, y = temp, color = o3)) +
-  geom_point() +
-  geom_hline(yintercept = c(0, 73)) +
-  labs(x = "Year", y = "Temperature (°F)")
+# ggplot(chic, aes(x = date, y = temp, color = o3)) +
+#   geom_point() +
+#   geom_hline(yintercept = c(0, 73)) +
+#   labs(x = "Year", y = "Temperature (°F)")
 
 g <- ggplot(chic, aes(x = temp, y = dewpoint)) +
   geom_point(color = "dodgerblue", alpha = .5) +
   labs(x = "Temperature (°F)", y = "Dewpoint")
 
-g +
-  geom_vline(aes(xintercept = median(temp)), size = 1.5,
-             color = "firebrick", linetype = "dashed") +
-  geom_hline(aes(yintercept = median(dewpoint)), size = 1.5,
-             color = "firebrick", linetype = "dashed")
 
-reg <- lm(dewpoint ~ temp, data = chic)
+```
 
-g +
-  geom_abline(intercept = coefficients(reg)[1],
-              slope = coefficients(reg)[2],
-              color = "darkorange2", size = 1.5) +
-  labs(title = paste0("y = ", round(coefficients(reg)[2], 2),
-                      " * x + ", round(coefficients(reg)[1], 2)))
+add verticle and horizontal lines
+```{r}
+# g +
+#   geom_vline(aes(xintercept = median(temp)), size = 1.5,
+#              color = "firebrick", linetype = "dashed") +
+#   geom_hline(aes(yintercept = median(dewpoint)), size = 1.5,
+#              color = "firebrick", linetype = "dashed")
+# 
+# 
+# reg <- lm(dewpoint ~ temp, data = chic)
+# 
+# g +
+#   geom_abline(intercept = coefficients(reg)[1],
+#               slope = coefficients(reg)[2],
+#               color = "darkorange2", size = 1.5) +
+#   labs(title = paste0("y = ", round(coefficients(reg)[2], 2),
+#                       " * x + ", round(coefficients(reg)[1], 2)))
+# 
+# g +
+#   ## vertical line
+#   geom_linerange(aes(x = 50, ymin = 20, ymax = 55),
+#                  color = "steelblue", size = 2) +
+#   ## horizontal line
+#   geom_linerange(aes(xmin = -Inf, xmax = 25, y = 0),
+#                  color = "red", size = 1)
+# 
+# g +
+#   geom_segment(aes(x = 50, xend = 75,
+#                    y = 20, yend = 45),
+#                color = "purple", size = 2)
+# 
+# g +
+#   geom_curve(aes(x = 0, y = 60, xend = 75, yend = 0),
+#              size = 2, color = "tan") +
+#   geom_curve(aes(x = 0, y = 60, xend = 75, yend = 0),
+#              curvature = -0.7, angle = 45,
+#              color = "darkgoldenrod1", size = 1) +
+#   geom_curve(aes(x = 0, y = 60, xend = 75, yend = 0),
+#              curvature = 0, size = 1.5)
+# 
+# g +
+#   geom_curve(aes(x = 0, y = 60, xend = 75, yend = 0),
+#              size = 2, color = "tan",
+#              arrow = arrow(length = unit(0.07, "npc"))) +
+#   geom_curve(aes(x = 5, y = 55, xend = 70, yend = 5),
+#              curvature = -0.7, angle = 45,
+#              color = "darkgoldenrod1", size = 1,
+#              arrow = arrow(length = unit(0.03, "npc"),
+#                            type = "closed",
+#                            ends = "both"))
+```
 
-g +
-  ## vertical line
-  geom_linerange(aes(x = 50, ymin = 20, ymax = 55),
-                 color = "steelblue", size = 2) +
-  ## horizontal line
-  geom_linerange(aes(xmin = -Inf, xmax = 25, y = 0),
-                 color = "red", size = 1)
-
-g +
-  geom_segment(aes(x = 50, xend = 75,
-                   y = 20, yend = 45),
-               color = "purple", size = 2)
-
-g +
-  geom_curve(aes(x = 0, y = 60, xend = 75, yend = 0),
-             size = 2, color = "tan") +
-  geom_curve(aes(x = 0, y = 60, xend = 75, yend = 0),
-             curvature = -0.7, angle = 45,
-             color = "darkgoldenrod1", size = 1) +
-  geom_curve(aes(x = 0, y = 60, xend = 75, yend = 0),
-             curvature = 0, size = 1.5)
-
-g +
-  geom_curve(aes(x = 0, y = 60, xend = 75, yend = 0),
-             size = 2, color = "tan",
-             arrow = arrow(length = unit(0.07, "npc"))) +
-  geom_curve(aes(x = 5, y = 55, xend = 70, yend = 5),
-             curvature = -0.7, angle = 45,
-             color = "darkgoldenrod1", size = 1,
-             arrow = arrow(length = unit(0.03, "npc"),
-                           type = "closed",
-                           ends = "both"))
-
+add text to plot
+```{r}
 set.seed(2020)
 
 library(dplyr)
@@ -925,6 +994,11 @@ ggplot(sample, aes(x = date, y = temp, color = season)) +
   ylim(c(0, 90)) +
   theme(legend.position = "none")
 
+```
+
+
+more annotations
+```{r}
 library(ggrepel)
 
 ggplot(sample, aes(x = date, y = temp, color = season)) +
@@ -969,6 +1043,11 @@ ann <- data.frame(
   label = "Here is enough space\nfor some annotations."
 )
 
+```
+
+
+scaling graphs
+```{r}
 g <- 
   ggplot(chic, aes(x = o3, y = temp)) +
   geom_point() +
@@ -993,7 +1072,11 @@ library(tidyverse)
     group_by(season) %>% 
     summarize(o3 = min(o3, na.rm = TRUE) + 
                 (max(o3, na.rm = TRUE) - min(o3, na.rm = TRUE)) / 2))
+```
 
+
+annotating facet wraps
+```{r}
 ann
 
 g + 
@@ -1016,6 +1099,10 @@ g +
   facet_wrap(~season, scales = "free_x") +
   scale_y_continuous(limits = c(NA, 100))
 
+```
+
+more annotations
+```{r}
 library(ggtext)
 
 lab_md <- "This plot shows **temperature** in *°F* versus **ozone level** in *ppm*"
@@ -1030,19 +1117,24 @@ g +
   geom_richtext(aes(x = 33, y = 3, label = lab_html),
                 stat = "unique")
 
-g + 
-  geom_richtext(aes(x = 10, y = 25, label = lab_md),
-                stat = "unique", angle = 30, 
-                color = "white", fill = "steelblue", 
-                label.color = NA, hjust = 0, vjust = 0,
-                family = "Playfair Display")
-
+# g + 
+#   geom_richtext(aes(x = 10, y = 25, label = lab_md),
+#                 stat = "unique", angle = 30, 
+#                 color = "white", fill = "steelblue", 
+#                 label.color = NA, hjust = 0, vjust = 0,
+#                 family = "Playfair Display")
+# 
 lab_long <- "**Lorem ipsum dolor**<br><i style='font-size:8pt;color:red;'>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.<br>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</i>"
 
 g + 
   geom_textbox(aes(x = 40, y = 10, label = lab_long), 
                width = unit(15, "lines"), stat = "unique") 
 
+
+```
+
+coord flip
+```{r}
 ggplot(chic, aes(x = season, y = o3)) +
   geom_boxplot(fill = "indianred") +
   labs(x = "Season", y = "Ozone") +
@@ -1052,6 +1144,11 @@ ggplot(chic, aes(x = o3, y = season)) +
   geom_boxplot(fill = "indianred", orientation = "y") +
   labs(x = "Ozone", y = "Season")
 
+
+```
+
+
+```{r}
 ggplot(chic, aes(x = temp, y = o3)) +
   geom_point() +
   labs(x = "Temperature (°F)", y = "Ozone Level") +
@@ -1070,6 +1167,10 @@ ggplot(chic, aes(x = date, y = temp, color = o3)) +
   labs(x = "Year", y = "Temperature (°F)") +
   scale_y_reverse()
 
+
+```
+
+```{r}
 ## the default
 ggplot(chic, aes(x = temp, y = season)) +
   geom_jitter(aes(color = season),
@@ -1088,6 +1189,11 @@ ggplot(chic, aes(x = date, y = temp, color = o3)) +
   labs(x = "Year", y = "Temperature (°F)") +
   scale_y_log10(lim = c(0.1, 100))
 
+
+```
+
+
+```{r}
 library(tidyverse)
 
 chic %>%
@@ -1123,6 +1229,9 @@ ggplot(chic_sum, aes(x = "", y = rel)) +
   theme(axis.ticks = element_blank(),
         panel.grid = element_blank())
 
+```
+
+```{r}
 g <- 
   ggplot(chic, aes(x = season, y = o3,
                    color = season)) +
@@ -1143,6 +1252,9 @@ g + geom_violin(fill = "gray80", size = 1, alpha = .5) +
   geom_jitter(alpha = .25, width = .3) +
   coord_flip()
 
+
+
+
 library(ggforce)
 
 g + geom_violin(fill = "gray80", size = 1, alpha = .5) +
@@ -1155,6 +1267,10 @@ g + geom_violin(aes(fill = season), size = 1, alpha = .5) +
   scale_fill_brewer(palette = "Dark2", guide = "none") +
   coord_flip()
 
+```
+
+
+```{r}
 ggplot(chic, aes(x = date, y = temp, 
                  color = season)) +
   geom_point(show.legend = FALSE) +
@@ -1166,6 +1282,10 @@ ggplot(chic, aes(x = date, y = temp, color = season)) +
   geom_rug(sides = "r", alpha = .3, show.legend = FALSE) +
   labs(x = "Year", y = "Temperature (°F)")
 
+
+```
+
+```{r}
 library(tidyverse)
 
 corm <- 
@@ -1176,41 +1296,41 @@ corm <-
 
 corm
 
-corm <- corm %>%
-  pivot_longer(
-    cols = -rowname, 
-    names_to = "colname", 
-    values_to = "corr"
-  ) %>% 
-  mutate(rowname = fct_inorder(rowname),
-         colname = fct_inorder(colname))
-
-corm
-
-ggplot(corm, aes(rowname, fct_rev(colname), 
-                 fill = corr)) + 
-  geom_tile() + 
-  geom_text(aes(label = round(corr, 2))) +
-  coord_fixed() +
-  labs(x = NULL, y = NULL)
-
-ggplot(corm, aes(rowname, fct_rev(colname), 
-                 fill = corr)) + 
-  geom_tile() + 
-  geom_text(aes(
-    label = format(round(corr, 2), nsmall = 2),
-    color = abs(corr) < .75
-  )) +
-  coord_fixed(expand = FALSE) +
-  scale_color_manual(values = c("white", "black"), 
-                     guide = "none") +
-  scale_fill_distiller(
-    palette = "PuOr", na.value = "white",
-    direction = 1, limits = c(-1, 1)
-  ) + 
-  labs(x = NULL, y = NULL) +
-  theme(panel.border = element_rect(color = NA, fill = NA),
-        legend.position = c(.85, .8))
+# corm <- corm %>%
+#   pivot_longer(
+#     cols = -rowname, 
+#     names_to = "colname", 
+#     values_to = "corr"
+#   ) %>% 
+#   mutate(rowname = fct_inorder(rowname),
+#          colname = fct_inorder(colname))
+# 
+# corm
+# 
+# ggplot(corm, aes(rowname, fct_rev(colname), 
+#                  fill = corr)) + 
+#   geom_tile() + 
+#   geom_text(aes(label = round(corr, 2))) +
+#   coord_fixed() +
+#   labs(x = NULL, y = NULL)
+# 
+# ggplot(corm, aes(rowname, fct_rev(colname), 
+#                  fill = corr)) + 
+#   geom_tile() + 
+#   geom_text(aes(
+#     label = format(round(corr, 2), nsmall = 2),
+#     color = abs(corr) < .75
+#   )) +
+#   coord_fixed(expand = FALSE) +
+#   scale_color_manual(values = c("white", "black"), 
+#                      guide = "none") +
+#   scale_fill_distiller(
+#     palette = "PuOr", na.value = "white",
+#     direction = 1, limits = c(-1, 1)
+#   ) + 
+#   labs(x = NULL, y = NULL) +
+#   theme(panel.border = element_rect(color = NA, fill = NA),
+#         legend.position = c(.85, .8))
 
 ggplot(chic, aes(temp, o3)) +
   geom_density_2d() +
@@ -1220,6 +1340,11 @@ ggplot(chic, aes(temp, o3)) +
   geom_density_2d_filled(show.legend = FALSE) +
   coord_cartesian(expand = FALSE) +
   labs(x = "Temperature (°F)", x = "Ozone Level")
+
+
+```
+
+```{r}
 
 ## interpolate data
 library(akima)
@@ -1243,6 +1368,12 @@ g + geom_tile(aes(fill = Dewpoint)) +
   stat_contour(color = "white", size = .7, bins = 5) +
   scale_fill_viridis_c()
 
+
+```
+
+
+
+```{r}
 ggplot(chic, aes(temp, o3)) +
   geom_hex() +
   scale_fill_distiller(palette = "YlOrRd", direction = 1) +
@@ -1269,6 +1400,10 @@ ggplot(chic, aes(temp, o3, fill = ..density..)) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1) +
   labs(x = "Temperature (°F)", y = "Ozone Level")
 
+
+```
+
+```{r}
 library(ggridges)
 ggplot(chic, aes(x = temp, y = factor(year))) +
   geom_density_ridges(fill = "gray90") +
@@ -1280,13 +1415,17 @@ ggplot(chic, aes(x = temp, y = factor(year), fill = year)) +
   labs(x = "Temperature (°F)", y = "Year") +
   guides(fill = FALSE) +
   theme_ridges()
+# 
+# ggplot(chic, aes(x = temp, y = season, fill = ..x..)) +
+#   geom_density_ridges_gradient(scale = .9, gradient_lwd = .5,
+#                                color = "black") +
+#   scale_fill_viridis_c(option = "plasma", name = "") +
+#   labs(x = "Temperature (°F)", y = "Season") +
+#   theme_ridges(font_family = "Roboto Condensed", grid = FALSE)
 
-ggplot(chic, aes(x = temp, y = season, fill = ..x..)) +
-  geom_density_ridges_gradient(scale = .9, gradient_lwd = .5,
-                               color = "black") +
-  scale_fill_viridis_c(option = "plasma", name = "") +
-  labs(x = "Temperature (°F)", y = "Season") +
-  theme_ridges(font_family = "Roboto Condensed", grid = FALSE)
+
+
+
 
 library(tidyverse)
 
@@ -1302,7 +1441,12 @@ ggplot(data = filter(chic, season %in% c("Summer", "Winter")),
                       name = "Season:", guide = "legend") +
   theme_ridges(grid = FALSE) +
   labs(x = "Temperature (°F)", y = "Year")
-
+  
+  
+```
+  
+cumulative bumps
+```{r}
 ggplot(chic, aes(x = temp, y = factor(year), fill = year)) +
   geom_density_ridges(stat = "binline", bins = 25, scale = .9,
                       draw_baseline = FALSE, show.legend = FALSE) +
@@ -1326,6 +1470,12 @@ ggplot(chic, aes(x = date, y = o3run)) +
             fill = "orange", alpha = .4) +
   labs(x = "Year", y = "Ozone")
 
+
+```
+
+
+put lines through graph
+```{r}
 chic$mino3 <- chic$o3run - sd(chic$o3run, na.rm = TRUE)
 chic$maxo3 <- chic$o3run + sd(chic$o3run, na.rm = TRUE)
 
@@ -1361,6 +1511,11 @@ ggplot(chic, aes(x = o3, y = temp))+
   geom_smooth(stat = "smooth") + ## the default
   geom_point(color = "gray40", alpha = .3) 
 
+
+```
+
+stat smooth
+```{r}
 ggplot(chic, aes(x = o3, y = temp))+
   labs(x = "Ozone Level", y = "Temperature (°F)") +
   stat_smooth(geom = "smooth") + ## the default
@@ -1385,6 +1540,10 @@ ggplot(chic, aes(x = date, y = temp)) +
               se = FALSE, size = .8) +
   scale_color_manual(name = "k", values = cols)
 
+```
+
+
+```{r}
 ## library(shiny)
 ## runExample("01_hello")
 
