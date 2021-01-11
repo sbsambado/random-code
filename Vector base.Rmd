@@ -1,0 +1,123 @@
+---
+title: "vectorbase"
+author: "sbsambado"
+date: "12/27/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+load packages and helpful variables
+```{r}
+library(tidyverse)
+library(janitor)
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(ggpubr)
+library(lubridate)
+library(caret)
+library(splines)
+library(cowplot)
+library(rworldmap)
+library(ggmap)
+
+clean_background <- theme(plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("white"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12),
+        legend.key = element_rect("white"))
+multiplottitletheme <- theme(plot.title = element_text(face = 'bold', hjust = 0.04, size = 10,  color = 'black', vjust = -6))
+rotatexaxistheme <- theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+ytitletheme <- theme(axis.title.y = element_text(face = 'bold', size = 12, vjust = 0.5))
+xtitletheme <- theme(axis.title.x = element_text(face = 'bold', size = 12, vjust = 0.5))
+
+
+```
+
+
+load data
+```{r}
+vecmap <- read_csv("vectorbasemap.csv")
+nrow(export) #72
+View(vecmap)
+
+
+vecmap <- vecmap %>% 
+  clean_names() 
+```
+
+
+Whole genome sequencing
+```{r}
+
+Vecmap <- vecmap %>% 
+  group_by(locations, species) %>% 
+  summarise(count = n())
+  # arrange(-count)
+
+
+ggplot(Vecmap, aes(x = locations,y = count))+
+  geom_histogram(stat = 'identity', fill = 'grey85')+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 70, size = 8, face = 'bold', hjust = 1)) +
+  labs(x = "sample location", y = "count of I. scapularis")+
+  ggtitle("VectorBase Population Map samples")
+
+
+VecMap <- vecmap %>% 
+  clean_names() %>% 
+  group_by(locations, collection_date_range) %>% 
+  summarise(count = n())
+
+## data collected from 2008, 2010, 2011, 2012, 2013
+ggplot(VecMap, aes(x = collection_date_range, y = count, fill = locations)) +
+  geom_histogram(stat = "identity")+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 70, size = 8, face = 'bold', hjust = 1))
+
+
+VECmap <- vecmap %>% 
+  clean_names() %>% 
+  group_by(locations, latitudes) %>% 
+  summarise(count = n()) %>% 
+  arrange(-latitudes) 
+
+  ggplot(VECmap, aes(x = locations, y = count)) +
+  geom_histogram(stat = "identity")+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 70, size = 8, face = 'bold', hjust = 1))
+
+```
+
+
+```{r}
+world <- getMap(resolution = "low")
+
+# Map of US with all NEON sites
+saf_countries <- c("United States of America")
+# Call the vector in `borders()`
+world_saf <- world[world@data$ADMIN %in% saf_countries, ]
+ggplot() +
+	geom_polygon(data = world_saf, 
+		aes(x = long, y = lat, group = group),
+		fill = NA, colour = "black") + 
+	geom_point(data = vecmap,  # Add and plot speices data
+		aes(x = longitudes, y = latitudes, color = locations)) +
+	coord_quickmap() + 
+	xlim(-91, -65) +  # Set x axis limits, xlim(min, max)
+	ylim(25, 49) +  # Set y axis limits
+	theme_classic() +  # Remove ugly grey background
+	xlab("Longitude") +
+	ylab("Latitude") +
+  labs(title = "VectorBase sites\nof field collected I.scap genomes")
+```
+
+
+

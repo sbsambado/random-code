@@ -6,6 +6,76 @@ output: html_document
 ---
 
 
+```{r}
+
+install.packages("tidyverse")
+install.packages('readr')
+install.packages('ggpubr')
+install.packages('ggplot2')
+install.packages('dplyr')
+install.packages('gridExtra')
+install.packages('plyr')
+install.packages('car')
+install.packages('multcomp')
+install.packages('multcompView')
+install.packages('reshape2')
+install.packages('stringr')
+install.packages('car')
+install.packages('psych')
+install.packages('knitr')
+install.packages('nlme')
+install.packages('lme4')
+install.packages('kableExtra')
+install.packages('MASS')
+install.packages('grid')
+install.packages('vegan')
+install.packages('devtools')
+install.packages('ggfortify')
+install.packages('jtools')
+install.packages('effects')
+install.packages('pscl')
+install.packages('lmtest')
+install.packages('extrafont')
+```
+
+```{r}
+library(tidyverse)
+library(readr)
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(plyr)
+library(car)
+library(multcomp)
+library(multcompView)
+library(reshape2)
+library(stringr)
+library(car)
+library(psych)
+library(knitr)
+library(nlme)
+library(lme4)
+library(kableExtra)
+library(MASS)
+library(grid)
+library(vegan)
+library(devtools)
+library(ggfortify)
+library(jtools)
+library(effects)
+library(pscl)
+library(lmtest)
+library(extrafont)
+```
+
+I followed along the on-line version of the 3rd edition of "ggplot2: elegant graphics for data annalysis" published by Springer"
+
+**https://ggplot2-book.org/**
+
+
+# First steps (Chapter 2)
+
 color and shape = categorical values
 size = continuous variables
 
@@ -16,6 +86,11 @@ geom_smooth(span = 0.2)
 
 ```{r}
 library(ggplot2)
+library(extrafont)
+install.packages("aptheme")
+library(aptheme)
+#extrafont::font_import()
+theme_ap(family="")
 mpg
 
 
@@ -862,4 +937,9 @@ ggplot(mpg, aes(displ, hwy, colour = factor(cyl))) +
 ```
 
 
-## Scales (need to go back to do this)
+## Arranging plots
+
+```{r}
+
+```
+

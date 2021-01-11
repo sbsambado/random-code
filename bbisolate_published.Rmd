@@ -1,0 +1,49 @@
+---
+title: "isolate typing published studies"
+author: "sbsambado"
+date: "1/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(readr)
+library(ggplot2)
+pub <- read_csv("~/Desktop/bbtyping_published.csv")
+```
+
+```{r}
+
+
+ggplot(pub, aes(x = isolate_location, y = total_bbpos_tested))+
+  geom_point()
+
+ggplot(pub, aes(x = isolate_location, y = total_bbpos_tested, color = sample_type))+
+  geom_jitter(alpha = .7, size = 3) +
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 70, size = 6, hjust = 1))+
+ theme(legend.position = "horizontal")
+
+ggplot(pub, aes(x = isolate_location, y = total_bbpos_tested, fill = isolate_location))+
+  facet_wrap(~sample_type, scale = "free_y", nrow = 3)+
+  geom_histogram(stat = "identity") +
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 70, size = 6, hjust = 1))+
+ theme(legend.position = "horizontal")
+
+#legend.position = "bottom", 
+
+ny <- pub[which(pub$isolate_location== "NY"),]
+ggplot(ny, aes(x = sample_type, y = total_bbpos_tested))+
+  geom_boxplot(fill = "grey89")+
+  geom_point(aes(color =author), size = 3)+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 20, size = 6, hjust = 1))#+
+ #theme(legend.position = "horizontal")
+```
+
