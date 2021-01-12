@@ -7,6 +7,19 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+clean_background <- theme(plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("white"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12),
+        legend.key = element_rect("white"))
+multiplottitletheme <- theme(plot.title = element_text(face = 'bold', hjust = 0.04, size = 10,  color = 'black', vjust = -6))
+rotatexaxistheme <- theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+ytitletheme <- theme(axis.title.y = element_text(face = 'bold', size = 12, vjust = 0.5))
+xtitletheme <- theme(axis.title.x = element_text(face = 'bold', size = 12, vjust = 0.5))
 ```
 
 
@@ -14,8 +27,71 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(readr)
 library(ggplot2)
+library(tidyverse)
 pub <- read_csv("~/Desktop/bbtyping_published.csv")
 ```
+
+add regions
+
+For R21 proposal, I label regions as follows
+1. Northeast
+NJ, PA, RI, NY, CT, MA, NH, VT, ME
+
+2.	Mid-Atlantic
+a.	States: DE, MD, WV, VA, NC, TN, KY
+
+3.	Midwest
+a.	States: OH, IN, IL, IA, SD, MI, WI, MN, ND
+
+
+As of 1/11/21 there are 12 published studies I got the data from
+```{r}
+
+
+pub$region <- pub$isolate_location
+# northeast
+pub$region[pub$isolate_location == "NJ"] <- "Northeast"
+pub$region[pub$isolate_location == "PA"] <- "Northeast"
+pub$region[pub$isolate_location == "RI"] <- "Northeast"
+pub$region[pub$isolate_location == "NY"] <- "Northeast"
+pub$region[pub$isolate_location == "CT"] <- "Northeast"
+pub$region[pub$isolate_location == "MA"] <- "Northeast"
+pub$region[pub$isolate_location == "NH"] <- "Northeast"
+pub$region[pub$isolate_location == "VT"] <- "Northeast"
+pub$region[pub$isolate_location == "ME"] <- "Northeast"
+pub$region[pub$isolate_location == "CT, NY"] <- "Northeast"
+pub$region[pub$isolate_location == "CT, RI"] <- "Northeast"
+# mid-atlantic
+pub$region[pub$isolate_location == "DE"] <- "Mid-Atlantic"
+pub$region[pub$isolate_location == "MD"] <- "Mid-Atlantic"
+pub$region[pub$isolate_location == "WV"] <- "Mid-Atlantic"
+pub$region[pub$isolate_location == "VA"] <- "Mid-Atlantic"
+pub$region[pub$isolate_location == "NC"] <- "Mid-Atlantic"
+pub$region[pub$isolate_location == "TN"] <- "Mid-Atlantic"
+pub$region[pub$isolate_location == "KY"] <- "Mid-Atlantic"
+
+
+pub$region[pub$isolate_location == "OH"] <- "Midwest"
+pub$region[pub$isolate_location == "IN"] <- "Midwest"
+pub$region[pub$isolate_location == "IL"] <- "Midwest"
+pub$region[pub$isolate_location == "IA"] <- "Midwest"
+pub$region[pub$isolate_location == "SD"] <- "Midwest"
+pub$region[pub$isolate_location == "MI"] <- "Midwest"
+pub$region[pub$isolate_location == "WI"] <- "Midwest"
+pub$region[pub$isolate_location == "MN"] <- "Midwest"
+pub$region[pub$isolate_location == "ND"] <- "Midwest"
+
+
+unique(pub$region)
+length(unique(pub$author)) # 12
+# select 
+
+pubsub <- pub[which(pub$region == "Northeast" |
+                      pub$region == "Mid-Atlantic" |
+                      pub$region == "Midwest"),]
+```
+
+
 
 ```{r}
 
@@ -46,4 +122,151 @@ ggplot(ny, aes(x = sample_type, y = total_bbpos_tested))+
   theme(axis.text.x = element_text(angle = 20, size = 6, hjust = 1))#+
  #theme(legend.position = "horizontal")
 ```
+clean data names
+```{r}
+names(pubsub)[3] <- "location"
+names(pubsub)[4] <- "type"
+names(pubsub)[5] <- "total"
 
+
+```
+
+
+with subset data
+```{r}
+
+
+ggplot(pubsub, aes(x = location, y = total, color = type))+
+  geom_point()+
+  clean_background+
+  theme(legend.position = 'bottom', legend.box = 'horizontal')+
+  theme(legend.title = element_text(size = 7),legend.text = element_text(size = 7))+
+  rotatexaxistheme +
+  theme(axis.title.y =  element_text(face = 'bold',size = 12, vjust = .5))+
+  theme(axis.title.x =  element_text(face = 'bold',size = 12))
+
+# boxplot of region
+ggplot(pubsub, aes(x = region, y = total))+
+  geom_boxplot(fill = "grey93")+
+  geom_jitter(alpha = .5, aes(color = type), width = .3, size = 2)+
+  clean_background+
+  theme(legend.position = 'bottom', legend.box = 'horizontal')+
+  theme(legend.title = element_text(size = 7),legend.text = element_text(size = 7))+
+  theme(axis.title.y =  element_text(face = 'bold',size = 12, vjust = .5))+
+  theme(axis.title.x =  element_text(face = 'bold',size = 12))
+
+# histogram of all states by sample type
+ggplot(pubsub, aes(x = location, y = total, fill = location))+
+  facet_wrap(~type, scale = "free_y", nrow = 3)+
+  geom_histogram(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 70, size = 6, hjust = 1))+
+ theme(legend.position = "horizontal")+
+  clean_background+
+  theme(strip.background = element_rect(fill = 'gray95'))+
+  theme(axis.text.y = element_text(size = 9))+
+  theme(axis.title.y =  element_text(face = 'bold',size = 12, vjust = .5))+
+  theme(axis.title.x =  element_text(face = 'bold',size = 12))+
+  theme(strip.text.x = element_text(size = 8))
+
+# histogram of region by sample type no free y
+ggplot(pubsub, aes(x = region, y = total, fill = location))+
+  facet_wrap(~type, nrow = 3)+
+  geom_histogram(stat = "identity") +
+ theme(legend.position = "horizontal")+
+  clean_background+
+  theme(axis.text.x = element_text(size = 8))+
+  theme(strip.background = element_rect(fill = 'gray95'))+
+  theme(axis.text.y = element_text(size = 9))+
+  theme(axis.title.y =  element_text(face = 'bold',size = 12, vjust = .5))+
+  theme(axis.title.x =  element_text(face = 'bold',size = 12))+
+  theme(strip.text.x = element_text(size = 8))
+
+# histogram of region by sample type no free y
+ggplot(pubsub, aes(x = region, y = total, fill = location))+
+  facet_wrap(~type, scale = "free_y", nrow = 3)+
+  geom_histogram(stat = "identity") +
+  clean_background+
+  theme(axis.text.x = element_text(size = 8))+
+  theme(strip.background = element_rect(fill = 'gray95'))+
+  theme(axis.text.y = element_text(size = 9))+
+  theme(axis.title.y =  element_text(face = 'bold',size = 12, vjust = .5))+
+  theme(axis.title.x =  element_text(face = 'bold',size = 12))+
+  theme(strip.text.x = element_text(size = 8))+
+  theme(legend.position = "bottom",
+        legend.key.width =  unit(.01, "cm"),
+        legend.key.height = unit(.01, "cm"),
+        legend.text = element_text(size = 5),
+        legend.title = element_text(size = 7))
+  
+
+
+# histogram of NY isolates
+ny <- pubsub[which(pubsub$location== "NY"),]
+ggplot(ny, aes(x = type, y = total))+
+  geom_boxplot(fill = "grey89")+
+  geom_point(aes(color =author), size = 3)+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 20, size = 6, hjust = 1))+
+  ggtitle("NY isolates")+
+  theme(axis.title.y =  element_text(face = 'bold',size = 12, vjust = .5))+
+  theme(axis.title.x =  element_text(face = 'bold',size = 12))
+
+unique(pubsub$type)
+
+pubsub$type = factor(pubsub$type,
+                     levels = c("human skin", "human blood",
+                                "human CSF", "I. scapularis (questing)", "I. scapularis (attached to mammal)", "mammal ear tissue"),
+                     labels = c("Human skin", "Human blood", "Human CSF", "I. scapularis (questing)", "I. scapularis (attached)", "Mammal ear tissue"))
+
+
+ggplot(pubsub, aes(x = type, y = total, fill = region))+
+  geom_histogram(stat = "identity")+
+  clean_background+
+  theme(axis.text.x = element_text(angle = 10, size = 6, vjust = .7))+ 
+  theme(axis.title = element_text(face = 'bold',size = 12, vjust = 1))+
+  theme(legend.position = 'bottom', legend.box = 'horizontal')+
+  labs(x = "Isolate Type", y = "Total", fill = "Region")+
+  theme(legend.key.width =  unit(.3, "cm"),
+        legend.key.height = unit(.3, "cm"),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 10))
+# ggsave("isolatetypebyregion.pdf", dpi = 320) 
+
+```
+
+power analyses
+```{r}
+
+library(pwr)
+library(effsize)
+
+ne <- pubsub %>% 
+  filter(region == "Northeast") %>% 
+  pull(total)
+
+mw <- pubsub %>% 
+  filter(region == "Midwest") %>% 
+  pull(total)
+# Calculate Cohen's d for effect size btwn smoking/non-smoking
+effect_size <- cohen.d(ne,mw)
+effect_size # d-estimate: 0.21 (small effect size)
+ # This is a small size
+
+
+power_small <- pwr.t.test(n = NULL, d = 0.2, sig.level = .05, power = 0.8)
+power_small # ~393
+power_medium <- pwr.t.test(n = NULL, d = 0.5, sig.level = .05, power = 0.8)
+power_medium # ~ 64
+power_large <- pwr.t.test(n = NULL, d = 0.8, sig.level = .05, power = 0.8)
+power_large # ~ 25
+
+
+# if want to calculate power associated with test
+# small effect size; need 400 samples in each group
+power_post_hoc <- pwr.t.test(n = 400, d = 0.2, sig.level = 0.05, p = NULL)
+power_post_hoc # power = ~.8
+
+#medium effect size; need 65 samples in each group
+power_post_hoc <- pwr.t.test(n = 65, d = 0.5, sig.level = 0.05, p = NULL)
+power_post_hoc # power = ~.8
+```
