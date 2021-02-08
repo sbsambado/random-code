@@ -218,8 +218,17 @@ pubsub$type = factor(pubsub$type,
                                 "human CSF", "I. scapularis (questing)", "I. scapularis (attached to mammal)", "mammal ear tissue"),
                      labels = c("Human skin", "Human blood", "Human CSF", "I. scapularis (questing)", "I. scapularis (attached)", "Mammal ear tissue"))
 
+pubsub$cycle <- pubsub$type
 
-ggplot(pubsub, aes(x = type, y = total, fill = region))+
+pubsub$cycle[pubsub$type == "human skin"] <- "Human"
+pubsub$cycle[pubsub$type == "human blood"] <- "Human"
+pubsub$cycle[pubsub$type == "human CSF"] <- "Human"
+pubsub$cycle[pubsub$type == "I. scapularis (questing)"] <- "Enzootic"
+pubsub$cycle[pubsub$type == "I. scapularis (attached to mammal)"] <- "Enzootic"
+pubsub$cycle[pubsub$type == "Mammal ear tissue"] <- "Enzootic"
+
+
+ggplot(pubsub, aes(x = type, y = total, fill = region, color = region))+
   geom_histogram(stat = "identity")+
   clean_background+
   theme(axis.text.x = element_text(angle = 10, size = 6, vjust = .7))+ 
@@ -229,8 +238,11 @@ ggplot(pubsub, aes(x = type, y = total, fill = region))+
   theme(legend.key.width =  unit(.3, "cm"),
         legend.key.height = unit(.3, "cm"),
         legend.text = element_text(size = 8),
-        legend.title = element_text(size = 10))
-# ggsave("isolatetypebyregion.pdf", dpi = 320) 
+        legend.title = element_text(size = 10))+
+  guides(color = FALSE)
+ggsave("isolatetypebyregion.pdf", dpi = 320) 
+
+
 
 ```
 
