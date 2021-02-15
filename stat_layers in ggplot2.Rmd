@@ -1,0 +1,193 @@
+---
+title: "demystifying stat_layers in ggplot2"
+author: "sbsambado"
+date: "2/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+```
+
+just taking code from June Choe
+https://yjunechoe.github.io/posts/2020-09-26-demystifying-stat-layers-ggplot2/
+
+Thought it was helpful to think about stat_layers vs geom_layers
+
+```{r message = FALSE}
+
+# make data
+simple_data <- tibble(group = factor(rep(c("A", "B"), each = 15)),
+                      subject = 1:30,
+                      score = c(rnorm(15, 40, 20), rnorm(15, 60, 10)))
+
+```
+
+```{r the long way}
+simple_data_bar <- simple_data %>%
+  group_by(group) %>% 
+  summarize(
+    mean_score = mean(score),
+    .groups = 'drop'
+  )
+  
+simple_data_errorbar <- simple_data %>% 
+  group_by(group) %>% 
+  summarize(
+    mean_score = mean(score),
+    se = sqrt(var(score)/length(score)),
+    .groups = 'drop'
+  ) %>% 
+  mutate(
+    lower = mean_score - se,
+    upper = mean_score + se
+  )
+
+ggplot() +
+  geom_col(
+    aes(x = group, y = mean_score),
+    data = simple_data_bar
+  ) +
+  geom_errorbar(
+    aes(x = group, y = mean_score, ymin = lower, ymax = upper),
+    data = simple_data_errorbar
+  )
+```
+
+```{r the short way}
+simple_data %>% 
+  ggplot(aes(group, score)) +
+  stat_summary(geom = "bar") +
+  stat_summary(geom = "errorbar")
+```
+Let’s analyze stat_summary() as a case study to understand how stat_*()s work more generally. I think that stat_summary() is a good choice because it’s a more primitive version of many other stat_*()s and is likely to be the one that you’d end up using the most for visualizations in data science.
+
+```{r }
+height_df <- tibble(group = "A",
+                    height = rnorm(30, 170, 10))
+
+# geom way
+height_df %>% 
+  ggplot(aes(x = group, y = height)) +
+  geom_point()
+
+# stat way
+height_df %>% 
+  ggplot(aes(x = group, y = height)) +
+  stat_summary()
+```
+First, we see from the documentation of stat_summary() that this mean_se() thing is the default value for the fun.data argument (we’ll talk more on this later).
+
+Next, let’s call it in the console to see what it is:
+type `mean_se` in console
+
+function (x, mult = 1) 
+  {
+      x <- stats::na.omit(x)
+      se <- mult * sqrt(stats::var(x)/length(x))
+      mean <- mean(x)
+      new_data_frame(list(y = mean, ymin = mean - se, ymax = mean + 
+          se), n = 1)
+  }
+  
+  
+This is actually really important: stat_summary() summarizes one dimension of the data. 11 mean_se() threw an error when we passed it our whole data because it was expecting just a vector of the variable to be summarized.
+```{r}
+# wrong
+# mean_se(height_df)
+
+# right
+mean_se(height_df$height)
+
+```
+
+You know how else we can check that this is the case? With this neat function called layer_data().
+
+We can pull the data that was used to draw the pointrange by passing our plot object to layer_data() and setting the second argument to 1 12 :
+
+```{r}
+pointrange_plot <- height_df %>% 
+  ggplot(aes(x = group, y = height)) +
+  stat_summary()
+
+layer_data(pointrange_plot, 1) # see all the info
+```
+
+layer_data(pointrange_plot, 1)
+  
+
+### Interim Summary 2
+To summarize this section (ha!), stat_summary() works in the following order:
+
+The data that is passed into ggplot() is inherited if one is not provided
+
+The function passed into the fun.data argument applies transformations to (a part of) that data (defaults to mean_se())
+
+The result is passed into the geom provided in the geom argument (defaults to pointrange).
+
+If the data contains all the required mapppings for the geom, the geom will be plotted.
+
+And to make things extra clear & to make stat_summary() less mysterious, we can explicitly spell out the two arguments fun.data and geom that we went over in this section.
+```{r}
+height_df %>% 
+  ggplot(aes(x = group, y = height)) +
+  stat_summary(
+    geom = "pointrange",
+    fun.data = mean_se
+  )
+```
+
+### Putting STAT to use
+
+```{r message = FALSE}
+remotes::install_github("allisonhorst/palmerpenguins")
+data("penguins", package = "palmerpenguins")
+my_penguins <- na.omit(penguins) # get rid of NAs
+```
+
+
+```{r}
+my_penguins %>% 
+  ggplot(aes(sex, body_mass_g)) +
+  stat_summary(
+    fun.data = ~mean_se(., mult = 1.96), # Increase `mult` value for bigger interval!
+    geom = "errorbar",
+  )
+
+bind_rows(
+  mean_se(my_penguins$body_mass_g[my_penguins$sex == "female"], mult = 1.96),
+  mean_se(my_penguins$body_mass_g[my_penguins$sex == "male"], mult = 1.96),
+)
+```
+A color-coded bar plot of medians
+```{r}
+calc_median_and_color <- function(x, threshold = 40) {
+  tibble(y = median(x)) %>% 
+    mutate(fill = ifelse(y < threshold, "pink", "grey35"))
+}
+
+my_penguins %>% 
+  ggplot(aes(species, bill_length_mm)) +
+  stat_summary(
+    fun.data = calc_median_and_color,
+    geom = "bar"
+  )
+```
+
+Pointrange plot with changing size
+```{r}
+my_penguins %>% 
+  ggplot(aes(species, bill_depth_mm)) +
+  stat_summary(
+    fun.data = function(x) {
+      
+      scaled_size <- length(x)/nrow(my_penguins)
+      
+      mean_se(x) %>% 
+        mutate(size = scaled_size)
+    }
+  )
+```
+
