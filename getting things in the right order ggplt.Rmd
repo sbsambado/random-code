@@ -1,0 +1,79 @@
+---
+title: "getting things into the right order ggplot"
+author: "sbsambado"
+date: "2/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggplot2)
+
+remotes::install_github("allisonhorst/palmerpenguins")
+library(palmerpenguins)
+
+devtools::install_github("jennybc/gapminder")
+library("gapminder")
+
+install.packages("nycflights13")
+library(nycflights13)
+```
+
+Reorder based on frequency: `fact_infreq()`
+```{r}
+penguins %>%
+  mutate(species = fct_infreq(species)) %>%
+  ggplot(aes(y = species)) + geom_bar()
+```
+
+Let's see the difference
+```{r}
+penguins %>%
+  count(species) %>% # summarize data
+  mutate(species = fct_reorder(species, n)) %>%
+  ggplot(aes(n, species)) + geom_col()
+
+penguins %>% # modify the original dataset, no summary
+  mutate(species = fct_infreq(species)) %>%
+  ggplot(aes(y = fct_rev(species))) + geom_bar()
+
+```
+
+Alternative orderings: by largest difference
+```{r}
+gapminder %>%
+  filter(country %in% c("Norway", "Portugal", "Spain", "Austria")) %>%
+  #order by custom function: here, difference between min/max
+  mutate(country = fct_reorder(country, lifeExp, functions(x){min(x) - max(x)} )) %>%
+  ggplot(aes(year, lifeExp)) + geom_line() +
+  facet_wrap(vars(country), nrow = 1)
+```
+
+final tweaks
+```{r}
+nycflights13 %>%
+  mutate(
+    name = fct_lump(fct_infreq(name), 7),
+    highlight - fct_other(
+      name, keep = "Other", other_level = "Named"
+    )
+  ) %>%
+  ggplot() +
+  aes(y = fct_rev(name), fill = highlight) +
+  geom_bar() +
+  scale_x_continuous(
+    name = "Number of flights",
+    expand = expansion(mult = c(0, 0.07))) +
+  scale_y_discrete(name = NULL) +
+  scale_y_discrete(name = NULL) +
+  scale_fill_manual(
+    values = c(
+      Named = "gray50", Other = "#98545F"),
+    guide = "none") +
+  theme_minimal_vgrid()
+    )
+  )
+```
+
