@@ -1,0 +1,463 @@
+---
+title: "Intro_GeospatialAnalysis_NASA"
+author: "sbsambado"
+date: "7/19/2021"
+output: html_document
+---
+
+>[Youtube link](https://www.youtube.com/watch?v=Ul5Ly0266fU)
+
+*Types of data*
+
++ shapefile(*.shp) : contains line, polygon, or point data
+
++ raster (gridded data) in *.tif format
+
+- tiff with embedded geolocation info is called a GeoTIFF
+
+- a raster grid contains a numeric data value in each grid cell
+
++ netCDF (*.nc) is a multidimensional data ("data cube") or model outputs in netCDF (.nc) format
+
+- x,y, time, date
+- stack 365 days into one file
+- look into daac.ornl.gov/workshops/NetCDF_webinar_08302017.html to learn more about NetCDF
+
+*Geographic projections*
+- geographic projection: lat and log as equally spaced grid
+- albers equal area projection: preserves relative area, but distorts shape
+
+
+*example* forest carbon stocks and net flux for CONUS
+
+
+```{r setup, include=FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(raster)
+library(rgdal)
+library(tigris) # provides states() function
+library(sp)
+
+
+```
+
+
+>[R Tutorial](https://daac.ornl.gov/resources/tutorials/r-geospatial-webinar/)
+
+Notice that we can set options for the raster package with `rasterOptions()`. These will help you see how long your code will take to run and help manage large objects.
+
+```{r message = FALSE, warning = FALSE,eval = FALSE}
+library(raster)
+  rasterOptions(progress = "text") # show the progress of running commands
+  rasterOptions(maxmemory = 1e+09) # increase memory allowance
+  rasterOptions(tmpdir = "temp_files") # folder for temporary storage of large objects
+```
+
+1. Read in data
+
+```{r}
+fire <- raster("./data/GrossEmissions_v101_USA_Fire.tif")
+insect <- raster("./data/GrossEmissions_v101_USA_Insect.tif")
+myStates <- states(cb = TRUE) # will download a generalized (1:500k) file
+```
+
+Check out the Coordinate Reference system (CRS) and plot a raster
+
+crs: gets coordinate reference system of a RasterLayer object
+
+```{r}
+# print(fire)
+# The output lists important attributes of *fire*, like its dimensions, resolution, spatial extent, coordinate reference system, and the minimum and maximum values of the cells (i.e., carbon emissions).
+
+fire@crs
+#The above command retrieves only the coordinate reference system (CRS) of *fire* in PROJ.4 format. The first argument of the CRS is "+proj=" and defines the projection. "aea" refers to the NAD83 / Albers NorthAm projection, and "+units=m" tells us that the resolution of the RasterLayer object is in meters. Refer to the attributes of *fire* provided by `print()`. The resoluton of the RasterLayer is "100, 100 (x, y)" meaning that each cell is 100 meters by 100 meters.
+
+# Use the `plot()` function to make a simple image of *fire* and visualize the carbon emissions from fire damage across the forests of the conterminous United States between 2006 and 2010. According to the documentation for the dataset, gross carbon emissions were measured in megagrams of carbon per year per cell.
+
+plot(fire,
+     main = "Gross Carbon Emissions from Fire Damage\n across CONUS Forests (2006-2010)",
+     xlab = "horizontal extent (m)",
+     ylab = "vertical extent (m)",
+     legend.args = list(text = "Mg C/yr\n", side = 3),
+     colNA = "black",
+     box = FALSE)
+
+# The spatial extent of the RasterLayer object is displayed on the x- and y-axes. All NA cells (i.e., cells that have no values) are colored black for better visualization of fire damage. The legend offers the range of cell values and represents them using a default color theme. 
+
+```
+Let's examine the RasterLayer object we named *insect*. `crs()` retrieves the CRS arguments for *insect* as a Vector object. We use `identical()` to determine if *fire* and *insect*  have the same CRS.
+```{r}
+identical(crs(fire), crs(insect))
+
+# The CRS for the two RasterLayer objects are identical. 
+```
+
+Plot *insect* but change the content for the argument "main = ", which defines the main title of the plot.
+```{r}
+plot(insect,
+     main = "Gross Carbon Emissions from Insect Damage\n across CONUS Forests (2006-2010)",
+     xlab = "horizontal extent (m)",
+     ylab = "vertical extent (m)",
+     legend.args = list(text = "Mg C/yr\n", side = 3),
+     colNA = "black",
+     box = FALSE)
+
+#You can likely imagine an outline of the United States given the spatial data distribution of the two RasterLayer objects. 
+
+```
+
+
+# Select Data Within a Region of Interest  
+
+*Functions featured in this section:*  
+
+**CRS {rgdal}**  
++ creates a CRS object using PROJ.4 arguments  
+
+**spTransform {rgdal}**  
++ provides re-projection using PROJ.4 projection arguments  
+
+**crop {raster}**  
++ returns a geographic subset of an object as specified by an Extent object  
+
+**mask {raster}**  
++ creates a new RasterLayer object with the same values as the input object, except for the cells that are NA in the second object  
+
+Next, we reduce the size of *fire* and *insect* by choosing a smaller extent of the RasterLayer objects. Use `print()` to view details about the internal data structure of the SpatialPolygonsDataFrame we named *myStates*.
+```{r}
+
+print(myStates)
+
+threeStates <- myStates[myStates$NAME == "Idaho" |
+                          myStates$NAME == "Montana" |
+                          myStates$NAME == "Wyoming",]
+
+print(threeStates)
+
+plot(threeStates)
+
+identical(crs(fire), crs(threeStates)) # FALSE
+
+
+
+
+```
+
+*threeStates* does not have the same CRS as *fire*, so we will make a new SpatialPolygonsDataFrame object with the projection of *fire* using `spTransform()`. We also use `CRS()` to properly format the projection arguments of *fire*.
+
+```{r}
+library(sf)
+transStates <- st_transform(threeStates,  CRS(fire@crs@projargs)) #instrad of spTransform()
+plot(transStates)
+
+# Plotting the new object *transStates* shows that the projection has changed. Notice how the orientation of the polygons has shifted to match the NAD83 / Albers NorthAm projection.
+
+
+```
+Now that our objects share a CRS, we will compare the extent of *fire* and *transStates*.
+```{r}
+
+transStates <-as_Spatial(transStates)
+
+class(transStates)
+
+
+cat("fire extent\n"); fire@extent; cat("transStates extent\n") ; transStates@bbox
+
+# *fire* has a much larger extent than *transStates*.
+```
+
+We will use the `crop()` function to reduce the extent of the two RasterLayer objects. Cropping will create a geographic subset of *fire* and *insect* as specified by the extent of *transStates*. We will name the new RasterLayer objects to reflect this manipulation.
+```{r}
+
+cropFire <- crop(fire, transStates) # crop(raster object,by the extent object)
+
+cropInsect <- crop(insect, transStates)
+```
+
+Now when we plot *cropFire* and *cropInsect*, we will also plot *transStates* "on top" to envision how carbon emissions are distributed across the three states.
+```{r}
+plot(cropFire,
+     main = "Gross Carbon Emissions from Fire Damage\n across ID, MT, WY Forests (2006-2010)",
+     xlab = "horizontal extent (m)",
+     ylab = "vertical extent (m)",     
+     legend.args = list(text = "Mg C/yr\n", side = 3),
+     colNA = "black",
+     box = FALSE)
+plot(transStates,
+     border = "white",
+     add = TRUE)
+plot(cropInsect,
+     main = "Gross Carbon Emissions from Insect Damage\n across ID, MT, WY Forests (2005-2010)",
+     xlab = "horizontal extent (m)",
+     ylab = "vertical extent (m)",
+     legend.args = list(text = "Mg C/yr\n", side = 3),
+     colNA = "black",
+     box = FALSE)
+plot(transStates,
+     border = "white",
+     add = TRUE)
+
+
+```
+
+If you look closely at the cells "outside" the boundary of the *transStates* polygons, you can still see cells values. That's because `crop()` changed the extent of the two RasterLayer objects to match that of the SpatialPolygonsDataFrame object, but the boundary of the *transStates* polygons are rotated to fit the NAD83 / Albers NorthAm projection and does not extend to the entire rectangular extent of the RasterLayer objects.
+
+To remove those extraneous cell values, use the `mask()` function to create two new rasters, one for fire damage and one for insect damage. **Note:** You can use `mask()` or `crop()` in either order.
+```{r}
+maskFire <- mask(cropFire,transStates) # mask(raster object, mask object)
+maskInsect <- mask(cropInsect, transStates)
+```
+
+Plot *maskFire* and *maskInsect*.
+```{r message=FALSE, warning=FALSE}
+plot(maskFire,
+     main = "Gross Carbon Emissions from Fire Damage\n across ID, MT, WY Forests (2006-2010)",
+     xlab = "horizontal extent (m)",
+     ylab = "vertical extent (m)",     
+     legend.args = list(text = "Mg C/yr\n", side = 3),
+     colNA = "black",
+     box = FALSE)
+plot(transStates,
+     border = "white",
+     add = TRUE)
+plot(maskInsect,
+     main = "Gross Carbon Emissions from Insect Damage\n across ID, MT, WY Forests (2005-2010)",
+     xlab = "horizontal extent (m)",
+     ylab = "vertical extent (m)",     
+     legend.args = list(text = "Mg C/yr\n", side = 3),
+     colNA = "black",
+     box = FALSE)
+plot(transStates,
+     border = "white",
+     add = TRUE)
+```
+
+
+These plots demonstrate that the extraneous cells has been removed from outside the boundary of the *transStates* polygons.
+
+# Examine Raster Value Summaries 
+*Functions featured in this section:*  
+**extract {raster}**  
++ extracts values from a RasterLayer object at the locations of other spatial data  
+
+In this section, we will compare the three states by their carbon emissions from fire damage only.
+
+We will use the `extract()` function to collect the cell values of *maskFire* where the *transStates* SpatialPolygonsDataFrame object overlaps the RasterLayer object on their shared coordinate reference system. The argument "df = TRUE" tells R that we want the results returned as a DataFrame object. We will use `summary()` to examine the distribution of cell values that we collect.
+
+```{r}
+
+val_firesStates <- extract(maskFire, transStates, df = TRUE) 
+# extract (raster object, extent object) # returns df object
+
+summary(val_firesStates)
+
+# There are two columns for *val_fireStates*. One is ID, which corresponds with the three states; 1 = Idaho, 2 = Montana, and 3 = Wyoming. The second column is a summary of all cell values across those three states. On average, 56 megagrams of carbon per year are a result of forest destruction by fire damage for all states combined.
+
+# val_firesStates <- readRDS("./data/val_fireStates.rds")
+```
+
+To look at the summary for cell values by state, we will use `subset()` to split the DataFrame into three. In the code below, we subest *val_fireStates* so that only the rows with a "1" for the ID number will be returned. We name the new object with the prefix "temp".
+```{r}
+temp_val_id <- subset(val_firesStates, subset = ID %in% 1)
+summary(temp_val_id)
+
+# The summary demonstrates that there is now only a single value is included in the ID column, and that the distribution of cell values has changed. This resultant DataFrame object is quite large and has more information than we need. We need only the second column and we don't care for the large number of NA's.
+
+```
+
+We will use the functions `which()` and `is.na()` to make a new object from the temporary one. We tell R that we want only the second column and the rows of *temp_val_id* that are not NA.
+```{r}
+val_id <- temp_val_id[which(!is.na(temp_val_id$GrossEmissons_v101_USA_Fire)), 2] # rows, columns
+
+summary(val_id) # The resultant object, *val_id*, is a Vector object (a single column of numbers) with no NA's.
+
+# We will do the same with *val_fire* for the states Montana and Wyoming.
+
+temp_val_mt <- subset(val_firesStates, subset = ID %in% 2)
+val_mt <- temp_val_mt[which(!is.na(temp_val_mt$GrossEmissions_v101_USA_Fire)),2]
+
+temp_val_wy <- subset(val_firesStates, subset = ID %in%2)
+val_wy <- temp_val_wy[which(!is.na(temp_val_wy$GrossEmissions_v101_USA_Fire)),2]
+
+```
+
+
+What's the average and range of values for carbon emissions from fire damage within each state for the period 2006 to 2010?
+```{r}
+cat("Idaho\n"); summary(val_id); cat("Montana\n"); summary(val_mt); cat("Wyoming\n"); summary(val_wy)
+
+# On average, Montana has the highest carbon emissions, but the maximum gross carbon emissions from a single cell occured in Idaho.
+
+```
+
+plot the states
+```{r}
+par(mfrow=c(2,2))
+# hist(val_id) 
+#      #ylim = c(0, 120000),  # same y-axis limit for all three states
+#      #xlim = c(0, 350))  # same x-axis limit for all three states
+hist(val_mt,
+     main = "Montana",
+     ylab = "number of cells",
+     xlab = "megagrams of carbon per year (Mg C/yr)",
+     ylim = c(0, 120000),
+     xlim = c(0, 350))
+hist(val_wy,
+     main = "Wyoming",
+     ylab = "number of cells",
+     xlab = "megagrams of carbon per year (Mg C/yr)",
+     ylim = c(0, 120000),
+     xlim = c(0, 350))
+```
+
+
+# Reclassify Raster Values  
+*Functions featured in this section:*  
+**reclassify {raster}**  
++ reclassifies groups of values of a RasterLayer object to other values  
+
+**calc {raster}**  
++ calculates values for a new RasterLayer object from another RasterLayer object using a formula  
+
+
+Now we are going to change the values of our two RasterLayer objects using different methods.
+
+Beginning with *maskFire*, we will use the `calc()` function to code all cells that have fire damage to be two. To use `calc()`, we must define a function that will detect certain cell values and change them to other values.
+
+```{r}
+
+reclassFire <- calc(maskFire,
+                    fun = function(x) {
+                      x[x > 0] <- 2
+                      return(x)
+                    })
+
+#The function we defined changed all *maskFire* cell values that were greater than zero to be two.
+
+
+#Check that our reclassification of *maskFire* worked as expected using `summary()`
+
+summary(reclassFire[])
+
+# Yes, all values are two or NA.
+
+
+
+```
+
+All cell values of *reclassFire* should be at the same locations as *maskFire* but with a single value.
+```{r}
+plot(reclassFire,
+     main = "Locations of Forest Disturbance from Fire Damage\n across ID, MT, WY Forests (2006-2010)",
+     xlab = "horizontal extent (m)",
+     ylab = "vertical extent (m)",
+     legend = FALSE,
+     col = "red",
+     colNA = "black",
+     box = FALSE)
+plot(transStates, 
+     border = "white", 
+     add = TRUE)
+
+# The plot of *reclassFire* now illustrates locations where there were carbon emissions owing to fire damaging the forest. Notice that we chose a single color to represent the presence of values using the argument "col = "red"".
+
+```
+
+# Reproject and Write a Raster
+> *Functions featured in this section:*  
+> **projectRaster {raster}**  
+> projects the values of a RasterLayer object to a new one with a different projection  
+> **writeRaster {raster}**  
+> writes an entire RasterLayer object to a file  
+
+Reprojecting a raster in R is different than transforming the CRS as we did with the SpatialPolygonsDataFrame earlier in the exercise. To reproject a raster we use the `projectRaster()` function and the `CRS()` function to correctly format the projection information.
+```{r}
+prjFireInsect <- raster("./data/prjFireInsect.tif")
+
+# this will take several minutes to run
+prjFireInsect <- projectRaster(fireInsect, 
+                               crs = CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"))
+print(prjFireInsect)
+
+print(prjFireInsect)
+
+```
+
+Now we have a new RasterLayer object named *prjFireInsect* that has the standard Geographic projection with latitude and longitude expressed in decimal degrees (DD) as its CRS.
+
+We will plot *prjFireInsect* with slightly different arguments than *fireInsect* to "zoom in" to the center of the plot. Also, we will use *threeStates* instead of *transStates* because *threeStates* also uses the Geographic projection.
+```{r}
+plot(prjFireInsect,
+     main = "Locations of Forest Disturbance\n across ID, MT, WY Forests (2006-2010)",
+     xlab = "longitude (DD)",
+     ylab = "latitude (DD)",
+     legend.args = list(text = "       Disturbance\n", side = 3),
+     las = 1,
+     ext = prjFireInsect@extent/1.25,
+     breaks = c(0, 1, 2),
+     col = c("dark green", "red"),
+     axis.args = list(at = c(0.5, 1.5), labels = c("insect", "fire")),
+     box = FALSE)
+plot(threeStates,
+     border = "black",
+     add = TRUE)
+```
+
+Let's use the `writeRaster()` function to save *prjFireInsect* to the data directory. We will save the file in \*.tif format so that the geographic information of the RasterLayer object is retrievable outside of R.
+```{r}
+writeRaster(prjFireInsect, filename = "./data/prjFireInsect.tif")
+
+file.exists("./data/prjFireInsect.tif")
+
+# According to the function `file.exists()`, which tests for the existence of a given file, our attempt to write *prjFireInsect* to our working directory was successful. Now we are able to share the RasterLayer with others or open it in another program.
+
+```
+
+# Export a Plot as PNG and Raster as KML 
+> *Functions featured in this section:*  
+> **KML {raster}**  
+> exports RasterLayer object data to a KML file
+
+To save the final plot, we use `png()`. This function will open a graphics device that will save the plot we run in \*.png format. We will use the function `dev.off()` to tell R when we are finished plotting and want to close the graphics device.
+
+```{r}
+png("prjFireInsect.png", width = 800, res = 80)
+plot(prjFireInsect,
+     main = "Locations of Forest Disturbance\n across ID, MT, WY Forests (2006-2010)",
+     xlab = "longitude (DD)",
+     ylab = "latitude (DD)",
+     legend.args = list(text = "       Disturbance\n", side = 3),
+     las = 1,
+     ext = prjFireInsect@extent/1.25,
+     breaks = c(0, 1, 2),
+     col = c("dark green", "red"),
+     axis.args = list(at = c(0.5, 1.5), labels = c("insect", "fire")),
+     box = FALSE)
+plot(threeStates,
+     border = "black",
+     add = TRUE)
+dev.off()
+```
+
+Let's also save *prjFireInsect* in \*.kml format. KML stands for Keyhole Markup Language, a  notation developed for geographic visualization in Google Earth. We'll also check to be sure the file was written to our data directory.
+```{r}
+KML(prjFireInsect, "./data/prjFireInsect.kml", col = c("dark green", "red"))
+file.exists("./data/prjFireInsect.kml")
+
+# We successfully saved the RasterLayer object as a KML file.
+
+```
+
+This is the end to the tutorial. If you liked this tutorial, please tell us on [Twitter](https://twitter.com/ORNLDAAC) or [Facebook](https://www.facebook.com/OakRidgeDAAC). If you would like to make a suggestion for a new tutorial, please email uso@ornl.gov.
+
+
+
+There is a supplemental document included on GitHub that offers two additional sections, *Perform a Focal Analysis* and *Get Cell Coordinates*.
+
+
+
+<!--------------------------------- END OF TUTORIAL --------------------------------->
+
