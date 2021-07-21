@@ -1,0 +1,99 @@
+---
+title: "Intro_GeospatialConcepts_Carpentry"
+author: "sbsambado"
+date: "7/20/2021"
+output: html_document
+---
+>[Intro to Geospatial Concepts - Data Carpentry](https://datacarpentry.org/organization-geospatial/)
+
+### Setup
+
+common packages you'll need
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(terra)
+library(rasterVis)
+library(dplyr)
+library(ggplot2)
+library(raster)
+library(rgdal)
+library(Rcpp)
+library(sp)
+library(remotes)
+library(sf)
+
+
+## make sure to set sf to binary
+#install.packages("sf",type="mac.binary")
+
+
+## some other things I tried
+#install.packages('terra', repos='https://rspatial.r-universe.dev')
+
+#remotes::install_github("rspatial/terra")
+
+```
+
+### Data Structures: Raster and Vector
+
+*Raster* data is stored as a grid of values which are rendered on a map as pixels
++ each pixel represents an area on Earth's surface
+
+*Vector* data structures represent specific features on the Earth's surface, and assign attributes to those features
+
+
+#### About Raster Data
+
++ raster data is gridded data where each pixel is associated with specific geographic location
++ value of pixel can be continuous (i.e. elevation) or categorical (i.e. land use)
++ geospatial raster is only different from a digital photo is that it's accompanied by spatial information that connects data to a particular location
+  + like raster's extent and cell size, # of rows & column, and its coordinate reference system (CRS)
+
+![grid](./grid.png)
+  
+```{r}
+
+```
+
+*Important Attributes of Raster Data*
+
+**Extent** : geographic area that the raster data covers. The spatial extent of an R spatial object represents the geographic edge or location that is the furthest north, south,east, and west. Extent represents the overall geographic coverage of the spatial object.
+
+**Resolution** : A resolution of a raster represents the area onthe ground that each pixel of the raster covers. Lower the number, higher the resolution.
+
+![resolution](./resolution.png)
+
+#### Raster data format for this workshop
++ this workship with use GeoTIFF (.tiff)
++ .tiff file stores metadata or attributes about the file embedded (tif tags)
++ a GeoTIFF is a standard .tif image format with additional spatial (georeferencing) information embedded in the file as tags. These tags should include the following raster metadata:
+ + 1. extent
+ + 2. resolution
+ + 3. coordinate reference system (CRS)
+ + 4. values that represent missing data (NoDataValue)
+ 
+**More resources on .tif format**
+>[GeoTiff on Wiki](https://en.wikipedia.org/wiki/GeoTIFF)
+>[OSGEO TIFF documentation](https://trac.osgeo.org/geotiff/)
+
+
+### Multi-band raster data
+A raster can contain 1+ bands.
++ one type of multi-band raster dataset = color image (consists of three bands: red, green, blue). The pixel brightness for each band, when composited creates the color that we see in the image.
+
+![color bands](./color bands.png)
+In multi-bands dataset, the rasters will always have the same extent, resolution, and CRS
+
+*Other types of multi-band raster data*
++ 1. Time series: same variable, over same area, over time. 
++ 2. Multi or hyperspectral imagery: image rasters that have 4+ (multi-spectral) or 10+ (hyperspectral) bands
+
+
+### Key Points
++ Raster data is pixelated data where each pixel is associated with a specific location
++ raster data always has an extent and resolution
++ extent is the geographical area covered by a raster
++ resolution is area covered by each pixel of a raster
+
+
